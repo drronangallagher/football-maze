@@ -1,0 +1,11 @@
+{
+  "name": "Football Maze",
+  "short_name": "Football Maze",
+  "description": "A football maze arcade game with touch, keyboard and gamepad controls.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#07111b",
+  "theme_color": "#07111b"
+}
