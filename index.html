@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Football Maze">
 <link rel="manifest" href="manifest.webmanifest">
-<title>Football Maze - Touch Edition v12</title>
+<title>Football Maze - Touch Edition v13</title>
 <style>
 :root{
   color-scheme:dark;
@@ -77,7 +77,8 @@ button.primary:hover{background:linear-gradient(180deg,#77eb98,#42b968)}
 .touch-dir,.touch-dpad-center{position:static;width:100%;height:100%;min-height:0;padding:0;border:1px solid rgba(181,218,239,.42);background:linear-gradient(180deg,rgba(36,66,86,.98),rgba(15,36,51,.99));color:#f6fbff;box-shadow:inset 0 1px rgba(255,255,255,.11),0 6px 16px rgba(0,0,0,.32);display:grid;place-items:center;font-size:38px;font-weight:950;line-height:1;touch-action:none;border-radius:17px}
 .touch-dir.active{background:linear-gradient(180deg,#78eba0,#39b866);color:#07170d;border-color:#98ffb7;transform:scale(.96)}
 .touch-up{grid-column:2;grid-row:1}.touch-down{grid-column:2;grid-row:3}.touch-left{grid-column:1;grid-row:2}.touch-right{grid-column:3;grid-row:2}
-.touch-dpad-center{grid-column:2;grid-row:2;background:#0c2130;color:#8fabbc;font-size:34px;pointer-events:none}
+.touch-dpad-center{grid-column:2;grid-row:2;background:#0c2130;color:#8fabbc;font-size:34px;pointer-events:none;z-index:4;transform:translate(var(--joy-x,0px),var(--joy-y,0px));transition:transform .09s ease-out}
+.touch-dpad.tracking .touch-dpad-center{transition:none}
 .touch-actions{margin-left:auto;display:flex;align-items:center;justify-content:flex-end;gap:24px;touch-action:none}
 .touch-action-btn{width:112px;height:112px;min-height:112px;border-radius:50%;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(180deg,rgba(35,68,89,.98),rgba(12,34,49,.98));border:2px solid rgba(173,216,240,.42);box-shadow:inset 0 2px rgba(255,255,255,.08),0 6px 18px rgba(0,0,0,.34);touch-action:none}
 .touch-action-btn strong{font-size:28px;line-height:1}.touch-action-btn span{font-size:11px;letter-spacing:.08em;color:#a9c0cf;font-weight:900}.touch-action-btn.primary-touch{background:linear-gradient(180deg,#69e48e,#36aa5d);border-color:#91f5ae;color:#07150c}.touch-action-btn.primary-touch span{color:#12391f}.touch-action-btn:active,.touch-action-btn.pressed{transform:scale(.95)}
@@ -902,13 +903,49 @@ function clearTouchPadVisual(){
   if(!ui.touchDpad) return;
   ui.touchDpad.querySelectorAll('.touch-dir').forEach(b=>b.classList.remove('active'));
 }
-function directionFromTouchPoint(clientX,clientY){
+const JOY_DEAD_ZONE=.10;
+const JOY_SWITCH_RATIO=1.18;
+function joystickSample(clientX,clientY){
   if(!ui.touchDpad) return null;
   const r=ui.touchDpad.getBoundingClientRect();
-  const dx=(clientX-(r.left+r.width/2))/(r.width/2);
-  const dy=(clientY-(r.top+r.height/2))/(r.height/2);
-  if(Math.hypot(dx,dy)<.18) return null;
-  return Math.abs(dx)>Math.abs(dy) ? (dx<0?'l':'r') : (dy<0?'u':'d');
+  const cx=r.left+r.width/2, cy=r.top+r.height/2;
+  const rawX=clientX-cx, rawY=clientY-cy;
+  const half=Math.max(1,Math.min(r.width,r.height)/2);
+  const dx=rawX/half, dy=rawY/half;
+  const mag=Math.hypot(dx,dy);
+  const maxVisual=Math.min(r.width,r.height)*.285;
+  const rawMag=Math.hypot(rawX,rawY);
+  const visualScale=rawMag>0?Math.min(1,maxVisual/rawMag):0;
+  return {dx,dy,mag,visualX:rawX*visualScale,visualY:rawY*visualScale};
+}
+function stickyJoystickDirection(sample){
+  if(!sample || sample.mag<JOY_DEAD_ZONE) return null;
+  const {dx,dy}=sample;
+  const ax=Math.abs(dx), ay=Math.abs(dy);
+  const horizontal=touchPadVisualDir==='l'||touchPadVisualDir==='r';
+  const vertical=touchPadVisualDir==='u'||touchPadVisualDir==='d';
+  if(!horizontal&&!vertical) return ax>=ay?(dx<0?'l':'r'):(dy<0?'u':'d');
+  if(horizontal){
+    if(ay>ax*JOY_SWITCH_RATIO) return dy<0?'u':'d';
+    return dx<0?'l':'r';
+  }
+  if(ax>ay*JOY_SWITCH_RATIO) return dx<0?'l':'r';
+  return dy<0?'u':'d';
+}
+function updateTouchJoystick(clientX,clientY){
+  const sample=joystickSample(clientX,clientY);
+  if(!sample) return;
+  ui.touchDpad.style.setProperty('--joy-x',sample.visualX.toFixed(1)+'px');
+  ui.touchDpad.style.setProperty('--joy-y',sample.visualY.toFixed(1)+'px');
+  const dir=stickyJoystickDirection(sample);
+  if(dir) applyTouchDirection(dir);
+}
+function resetTouchJoystick(){
+  if(!ui.touchDpad) return;
+  ui.touchDpad.classList.remove('tracking');
+  ui.touchDpad.style.setProperty('--joy-x','0px');
+  ui.touchDpad.style.setProperty('--joy-y','0px');
+  clearTouchPadVisual();
 }
 function applyTouchDirection(dir){
   if(!dir || dir===touchPadVisualDir) return;
@@ -922,25 +959,24 @@ if(ui.touchDpad){
     if(!touchCapable && e.pointerType==='mouse') return;
     e.preventDefault();
     touchPadPointer=e.pointerId;
+    ui.touchDpad.classList.add('tracking');
     try{ui.touchDpad.setPointerCapture(e.pointerId);}catch(_e){}
-    applyTouchDirection(directionFromTouchPoint(e.clientX,e.clientY));
+    updateTouchJoystick(e.clientX,e.clientY);
   });
   ui.touchDpad.addEventListener('pointermove',e=>{
     if(e.pointerId!==touchPadPointer) return;
     e.preventDefault();
-    const dir=directionFromTouchPoint(e.clientX,e.clientY);
-    if(dir) applyTouchDirection(dir);
-    else clearTouchPadVisual();
+    updateTouchJoystick(e.clientX,e.clientY);
   });
   const endTouchPad=e=>{
     if(e.pointerId!==touchPadPointer) return;
     e.preventDefault();
     touchPadPointer=null;
-    clearTouchPadVisual();
+    resetTouchJoystick();
   };
   ui.touchDpad.addEventListener('pointerup',endTouchPad);
   ui.touchDpad.addEventListener('pointercancel',endTouchPad);
-  ui.touchDpad.addEventListener('lostpointercapture',()=>{touchPadPointer=null;clearTouchPadVisual();});
+  ui.touchDpad.addEventListener('lostpointercapture',()=>{touchPadPointer=null;resetTouchJoystick();});
 }
 function touchActionPress(button,action){
   if(!button) return;
