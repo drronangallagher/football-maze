@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<title>Football Maze - Touch Edition v10</title>
+<title>Football Maze - Touch Edition v11</title>
 <style>
 :root{
   color-scheme:dark;
@@ -66,27 +66,24 @@ button.primary:hover{background:linear-gradient(180deg,#77eb98,#42b968)}
 @media(max-width:620px){.pad-pill{display:none}.hud{justify-content:space-between}.hud-card{min-width:0;flex:1}.game-layout{grid-template-rows:minmax(0,1fr) 90px}.side{grid-template-columns:145px 1fr}.side .panel:last-child{display:none}.actions button{min-height:35px;font-size:11px}}
 
 .play-column{min-height:0;min-width:0;display:grid;grid-template-rows:minmax(0,1fr);gap:7px}
-.touch-controller{display:none;min-height:116px;align-items:center;justify-content:space-between;gap:18px;padding:4px 10px 0;touch-action:none;user-select:none;-webkit-user-select:none}
-.touch-dpad{position:relative;width:116px;height:116px;flex:0 0 116px;touch-action:none;user-select:none;-webkit-user-select:none}
-.touch-dir,.touch-dpad-center{position:absolute;width:42px;height:42px;border:1px solid rgba(181,218,239,.38);background:linear-gradient(180deg,rgba(36,66,86,.97),rgba(15,36,51,.98));color:#f6fbff;box-shadow:inset 0 1px rgba(255,255,255,.1),0 5px 13px rgba(0,0,0,.28);display:grid;place-items:center;font-size:21px;font-weight:950;line-height:1;touch-action:none}
-.touch-dir{min-height:42px;padding:0;border-radius:11px}
-.touch-dir.active{background:linear-gradient(180deg,#78eba0,#39b866);color:#07170d;border-color:#98ffb7;transform:scale(.96)}
-.touch-up{left:37px;top:0}.touch-down{left:37px;bottom:0}.touch-left{left:0;top:37px}.touch-right{right:0;top:37px}
-.touch-dpad-center{left:37px;top:37px;border-radius:12px;background:#0c2130;color:#8fabbc;font-size:18px;pointer-events:none}
-.touch-actions{margin-left:auto;display:flex;align-items:center;justify-content:flex-end;gap:14px;touch-action:none}
-.touch-action-btn{width:72px;height:72px;min-height:72px;border-radius:50%;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;background:linear-gradient(180deg,rgba(35,68,89,.98),rgba(12,34,49,.98));border:2px solid rgba(173,216,240,.4);box-shadow:inset 0 2px rgba(255,255,255,.08),0 6px 16px rgba(0,0,0,.32);touch-action:none}
-.touch-action-btn strong{font-size:17px;line-height:1}.touch-action-btn span{font-size:8px;letter-spacing:.08em;color:#a9c0cf;font-weight:900}.touch-action-btn.primary-touch{background:linear-gradient(180deg,#69e48e,#36aa5d);border-color:#91f5ae;color:#07150c}.touch-action-btn.primary-touch span{color:#12391f}.touch-action-btn:active,.touch-action-btn.pressed{transform:scale(.94)}
-.touch-note{font-size:10px;color:#8ea8b8;font-weight:800;text-align:center;line-height:1.15;max-width:92px}
+.touch-controller{display:none;min-height:182px;align-items:center;justify-content:space-between;gap:24px;padding:6px 22px 2px;touch-action:none;user-select:none;-webkit-user-select:none}
+.touch-dpad{width:176px;height:176px;flex:0 0 176px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:5px;touch-action:none;user-select:none;-webkit-user-select:none}
+.touch-dir,.touch-dpad-center{position:static;width:100%;height:100%;min-height:0;padding:0;border:1px solid rgba(181,218,239,.38);background:linear-gradient(180deg,rgba(36,66,86,.97),rgba(15,36,51,.98));color:#f6fbff;box-shadow:inset 0 1px rgba(255,255,255,.1),0 5px 13px rgba(0,0,0,.28);display:grid;place-items:center;font-size:30px;font-weight:950;line-height:1;touch-action:none;border-radius:15px}
+.touch-dir.active{background:linear-gradient(180deg,#78eba0,#39b866);color:#07170d;border-color:#98ffb7;transform:scale(.95)}
+.touch-up{grid-column:2;grid-row:1}.touch-down{grid-column:2;grid-row:3}.touch-left{grid-column:1;grid-row:2}.touch-right{grid-column:3;grid-row:2}
+.touch-dpad-center{grid-column:2;grid-row:2;background:#0c2130;color:#8fabbc;font-size:27px;pointer-events:none}
+.touch-actions{margin-left:auto;display:flex;align-items:center;justify-content:flex-end;gap:22px;touch-action:none}
+.touch-action-btn{width:94px;height:94px;min-height:94px;border-radius:50%;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(180deg,rgba(35,68,89,.98),rgba(12,34,49,.98));border:2px solid rgba(173,216,240,.4);box-shadow:inset 0 2px rgba(255,255,255,.08),0 6px 16px rgba(0,0,0,.32);touch-action:none}
+.touch-action-btn strong{font-size:23px;line-height:1}.touch-action-btn span{font-size:10px;letter-spacing:.08em;color:#a9c0cf;font-weight:900}.touch-action-btn.primary-touch{background:linear-gradient(180deg,#69e48e,#36aa5d);border-color:#91f5ae;color:#07150c}.touch-action-btn.primary-touch span{color:#12391f}.touch-action-btn:active,.touch-action-btn.pressed{transform:scale(.94)}
+.touch-note{display:none}
+.touch-capable .game-layout{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr)}
+.touch-capable .side{display:none}
+.touch-capable .brand{display:none}
+.touch-capable .pad-pill{display:none}
 .touch-capable .play-column{grid-template-rows:minmax(0,1fr) auto}
 .touch-capable .touch-controller{display:flex}
 .touch-capable .kit-hint:after{content:' • Touch: tap kit, then START'}
 @media (pointer:coarse),(hover:none){button:hover{background:#132a3b;border-color:#34546b}.touch-action-btn.primary-touch:hover{background:linear-gradient(180deg,#69e48e,#36aa5d);border-color:#91f5ae}}
-@media(max-width:1100px){
-  .touch-capable .game-layout{grid-template-columns:1fr;grid-template-rows:minmax(0,1fr)}
-  .touch-capable .side{display:none}
-  .touch-capable .brand{display:none}
-  .touch-capable .pad-pill{display:flex;min-width:132px}
-}
 @media(max-width:700px){
   .touch-capable #gameApp{padding:4px;gap:4px}
   .touch-capable .topbar{gap:4px}
@@ -95,14 +92,22 @@ button.primary:hover{background:linear-gradient(180deg,#77eb98,#42b968)}
   .touch-capable .hud-card small{font-size:7px;margin-bottom:2px}
   .touch-capable .hud-card span{font-size:11px}
   .touch-capable .hud-card.score{min-width:64px}
-  .touch-capable .pad-pill{display:none}
-  .touch-controller{min-height:100px;padding:1px 6px 0}
-  .touch-dpad{width:98px;height:98px;flex-basis:98px}
-  .touch-dir,.touch-dpad-center{width:36px;height:36px}
-  .touch-up{left:31px}.touch-down{left:31px}.touch-left{top:31px}.touch-right{top:31px}.touch-dpad-center{left:31px;top:31px}
-  .touch-action-btn{width:62px;height:62px;min-height:62px}
-  .touch-actions{gap:9px}
-  .touch-note{display:none}
+  .touch-controller{min-height:154px;padding:3px 10px 0;gap:14px}
+  .touch-dpad{width:148px;height:148px;flex-basis:148px;gap:4px}
+  .touch-dir,.touch-dpad-center{font-size:25px;border-radius:13px}
+  .touch-dpad-center{font-size:23px}
+  .touch-action-btn{width:78px;height:78px;min-height:78px}
+  .touch-action-btn strong{font-size:20px}.touch-action-btn span{font-size:9px}
+  .touch-actions{gap:12px}
+}
+@media(max-width:480px){
+  .touch-controller{min-height:134px;padding-left:6px;padding-right:6px;gap:8px}
+  .touch-dpad{width:128px;height:128px;flex-basis:128px;gap:3px}
+  .touch-dir,.touch-dpad-center{font-size:21px;border-radius:11px}
+  .touch-dpad-center{font-size:20px}
+  .touch-action-btn{width:66px;height:66px;min-height:66px}
+  .touch-action-btn strong{font-size:17px}.touch-action-btn span{font-size:8px}
+  .touch-actions{gap:8px}
 }
 @media(prefers-reduced-motion:reduce){button{transition:none}}
 .kit-picker{position:absolute;left:50%;bottom:18px;transform:translateX(-50%);z-index:5;width:min(430px,calc(100% - 28px));padding:11px 13px 10px;border:1px solid rgba(255,255,255,.2);border-radius:15px;background:rgba(6,18,27,.93);box-shadow:0 12px 32px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.06);backdrop-filter:blur(7px);text-align:center}
@@ -163,7 +168,6 @@ button.primary:hover{background:linear-gradient(180deg,#77eb98,#42b968)}
         <button class="touch-dir touch-right" type="button" data-dir="r" aria-label="Move right">▶</button>
         <button class="touch-dir touch-down" type="button" data-dir="d" aria-label="Move down">▼</button>
       </div>
-      <div class="touch-note">Hold or slide your thumb around the D-pad</div>
       <div class="touch-actions">
         <button class="touch-action-btn primary-touch" id="touchStartBtn" type="button" aria-label="Start or continue"><strong>A</strong><span>START</span></button>
         <button class="touch-action-btn" id="touchPauseBtn" type="button" aria-label="Pause or resume"><strong>Ⅱ</strong><span>PAUSE</span></button>
