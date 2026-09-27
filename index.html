@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Football Maze">
 <link rel="manifest" href="manifest.webmanifest">
-<title>Football Maze - Touch Edition v14</title>
+<title>Football Maze - Touch Edition v15</title>
 <style>
 :root{
   color-scheme:dark;
@@ -331,6 +331,11 @@ let shake = 0, flash = 0, goalCelebrationUntil = 0, goalCooldownUntil = 0;
 let goalCrossedTiles = new Set();
 let particles = [], floaters = [];
 let audioCtx = null, soundOn = true;
+const BURP_SOUND_URL = 'https://www.myinstants.com/media/sounds/burp-1.mp3';
+const burpAudio = new Audio(BURP_SOUND_URL);
+burpAudio.preload = 'auto';
+burpAudio.volume = 1;
+let burpAudioPrimed = false;
 let pendingLevelTimer = 0, pendingLifeTimer = 0;
 let kitIndex = Math.max(0,KIT_OPTIONS.findIndex(x=>x.id===(localStorage.getItem('footballMazeKit')||'blue')));
 
@@ -856,10 +861,34 @@ function updateEffects(dt){
   shake=Math.max(0,shake-dt*24);flash=Math.max(0,flash-dt*2.4);
 }
 
+function primeBurpAudio(){
+  if(!soundOn || burpAudioPrimed) return;
+  try{
+    const previousVolume=burpAudio.volume;
+    burpAudio.volume=0;
+    const playPromise=burpAudio.play();
+    if(playPromise && typeof playPromise.then==='function'){
+      playPromise.then(()=>{
+        burpAudio.pause();
+        burpAudio.currentTime=0;
+        burpAudio.volume=previousVolume;
+        burpAudioPrimed=true;
+      }).catch(()=>{
+        burpAudio.volume=previousVolume;
+      });
+    } else {
+      burpAudio.pause();
+      burpAudio.currentTime=0;
+      burpAudio.volume=previousVolume;
+      burpAudioPrimed=true;
+    }
+  }catch(_e){}
+}
 function ensureAudio(){
   if(!soundOn) return;
   if(!audioCtx){ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }
   if(audioCtx.state==='suspended') audioCtx.resume();
+  primeBurpAudio();
 }
 function tone(freq,dur,type='sine',gain=.04,endFreq=freq,delay=0){
   if(!soundOn) return;ensureAudio();if(!audioCtx) return;
@@ -870,64 +899,15 @@ function noise(dur=.12,gain=.025){
 }
 function burpSound(){
   if(!soundOn) return;
-  ensureAudio();
-  if(!audioCtx) return;
-
-  const sr=audioCtx.sampleRate;
-  const dur=.62;
-  const frames=Math.max(1,Math.floor(sr*dur));
-  const buffer=audioCtx.createBuffer(1,frames,sr);
-  const data=buffer.getChannelData(0);
-
-  let phase1=0,phase2=0,phase3=0;
-  let wobblePhase=0;
-  for(let i=0;i<frames;i++){
-    const t=i/sr;
-    const u=t/dur;
-    const attack=Math.min(1,t/.018);
-    const release=Math.pow(Math.max(0,1-u),1.65);
-    const envelope=attack*release;
-
-    const glide=1-u;
-    const wobble=Math.sin(wobblePhase)*8 + Math.sin(wobblePhase*.47)*3;
-    const f1=92 + 82*glide + wobble;
-    const f2=f1*2.03;
-    const f3=f1*3.08;
-
-    phase1+=2*Math.PI*f1/sr;
-    phase2+=2*Math.PI*f2/sr;
-    phase3+=2*Math.PI*f3/sr;
-    wobblePhase+=2*Math.PI*5.4/sr;
-
-    const voiced=
-      Math.sin(phase1)*.72 +
-      Math.sin(phase2)*.21 +
-      Math.sin(phase3)*.09;
-
-    const rasp=(Math.random()*2-1) * (.20 + .18*Math.sin(Math.PI*u));
-    const gulp=Math.sin(2*Math.PI*(36+12*glide)*t) * .12;
-    data[i]=(voiced+rasp+gulp)*envelope*.46;
-  }
-
-  const source=audioCtx.createBufferSource();
-  const lowpass=audioCtx.createBiquadFilter();
-  const formant=audioCtx.createBiquadFilter();
-  const gain=audioCtx.createGain();
-
-  lowpass.type='lowpass';
-  lowpass.frequency.value=720;
-  lowpass.Q.value=.7;
-
-  formant.type='peaking';
-  formant.frequency.value=215;
-  formant.Q.value=1.9;
-  formant.gain.value=8;
-
-  gain.gain.value=.92;
-
-  source.buffer=buffer;
-  source.connect(lowpass).connect(formant).connect(gain).connect(audioCtx.destination);
-  source.start();
+  try{
+    burpAudio.pause();
+    burpAudio.currentTime=0;
+    burpAudio.volume=1;
+    const playPromise=burpAudio.play();
+    if(playPromise && typeof playPromise.catch==='function'){
+      playPromise.catch(()=>{});
+    }
+  }catch(_e){}
 }
 function sfx(type,n=1){
   if(!soundOn)return;
