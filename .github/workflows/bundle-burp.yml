@@ -15,22 +15,74 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Download exact Myinstants Burp 1 MP3
+      - name: Download mirrored Myinstants Burp 1 audio
         shell: bash
         run: |
           set -euo pipefail
-          curl --fail --location --retry 5 --retry-delay 2 \
-            --user-agent "Mozilla/5.0" \
-            --referer "https://www.myinstants.com/en/instant/burp-1-73520/" \
-            "https://www.myinstants.com/media/sounds/burp-1.mp3" \
-            --output burp-1.mp3
-          test -s burp-1.mp3
-          file burp-1.mp3
-          bytes="$(wc -c < burp-1.mp3)"
-          if [ "$bytes" -lt 1000 ]; then
-            echo "Downloaded file is unexpectedly small: $bytes bytes"
+          page_url="https://www.soundboardshop.com/en/instant/burp-1"
+          curl --fail --location --retry 5 --retry-delay 2             --user-agent "Mozilla/5.0"             "$page_url"             --output /tmp/burp-page.html
+
+          python3 - <<'PY'
+          import html
+          import re
+          import sys
+          from urllib.parse import urljoin
+
+          page = open('/tmp/burp-page.html', 'r', encoding='utf-8', errors='ignore').read()
+          page = html.unescape(page)
+
+          patterns = [
+              r'https?://[^"\'<>\s]+?\.mp3(?:\?[^"\'<>\s]*)?',
+              r'["\'](?:audioUrl|audio_url|audio|soundUrl|sound_url|fileUrl|file_url|downloadUrl|download_url|src)["\']\s*:\s*["\']([^"\']+)',
+              r'<source[^>]+src=["\']([^"\']+)["\']',
+              r'<audio[^>]+src=["\']([^"\']+)["\']',
+          ]
+
+          candidates = []
+          for pattern in patterns:
+              for m in re.finditer(pattern, page, re.I):
+                  u = m.group(1) if m.lastindex else m.group(0)
+                  u = u.replace('\\/', '/')
+                  u = urljoin('https://www.soundboardshop.com/', u)
+                  if u not in candidates:
+                      candidates.append(u)
+
+          print("Audio candidates:")
+          for u in candidates:
+              print(u)
+
+          with open('/tmp/audio-candidates.txt', 'w') as out:
+              out.write('\n'.join(candidates))
+
+          if not candidates:
+              print("No audio URL found in mirrored page source", file=sys.stderr)
+              sys.exit(1)
+          PY
+
+          downloaded=0
+          while IFS= read -r audio_url; do
+            [ -n "$audio_url" ] || continue
+            echo "Trying: $audio_url"
+            if curl --fail --location --retry 3 --retry-delay 1               --user-agent "Mozilla/5.0"               --referer "$page_url"               "$audio_url"               --output /tmp/burp-candidate; then
+              bytes="$(wc -c < /tmp/burp-candidate)"
+              mime="$(file --brief --mime-type /tmp/burp-candidate || true)"
+              echo "Candidate bytes=$bytes mime=$mime"
+              if [ "$bytes" -gt 1000 ] && [[ "$mime" == audio/* || "$mime" == application/octet-stream ]]; then
+                mv /tmp/burp-candidate burp-1.mp3
+                downloaded=1
+                break
+              fi
+            fi
+          done < /tmp/audio-candidates.txt
+
+          if [ "$downloaded" -ne 1 ]; then
+            echo "Could not download a valid audio candidate"
             exit 1
           fi
+
+          test -s burp-1.mp3
+          file burp-1.mp3
+          wc -c burp-1.mp3
 
       - name: Commit bundled audio
         shell: bash
@@ -40,7 +92,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add burp-1.mp3
           if git diff --cached --quiet; then
-            echo "burp-1.mp3 already matches the requested sound."
+            echo "burp-1.mp3 is already bundled."
             exit 0
           fi
           git commit -m "Bundle exact cupcake burp audio"
