@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Football Maze">
 <link rel="manifest" href="manifest.webmanifest">
-<title>Football Maze - Touch Edition v18</title>
+<title>Football Maze - Touch Edition v19</title>
 <style>
 :root{
   color-scheme:dark;
@@ -138,6 +138,13 @@ button.primary:hover{background:linear-gradient(180deg,#77eb98,#42b968)}
 .kit-shirt:before{left:-8px;border-radius:5px 1px 4px 5px;transform:rotate(18deg)}
 .kit-shirt:after{right:-8px;border-radius:1px 5px 5px 4px;transform:rotate(-18deg)}
 .kit-name{font-size:8px;font-weight:850;line-height:1;color:#cfe0e9}
+.difficulty-picker-title{font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:900;color:#a9bdca;margin:9px 0 6px}
+.difficulty-options{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.difficulty-option{min-height:36px;padding:4px 3px;border-radius:9px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.12);color:#dfeaf0;box-shadow:none;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05}
+.difficulty-option:hover{background:rgba(255,255,255,.09)}
+.difficulty-option.selected{border-color:#fff;box-shadow:0 0 0 2px rgba(102,224,138,.55),0 0 17px rgba(102,224,138,.18);background:rgba(255,255,255,.11)}
+.difficulty-name{font-size:9px;font-weight:900}
+.difficulty-count{font-size:8px;color:#9fb4c0;margin-top:2px}
 .kit-hint{margin-top:7px;font-size:10px;color:#829dad;font-weight:700}
 @media(max-height:700px){.kit-picker{bottom:8px;padding:7px 9px}.kit-picker-title{margin-bottom:5px}.kit-option{height:43px;width:46px}.kit-shirt{transform:scale(.84)}.kit-hint{display:none}}
 </style>
@@ -171,7 +178,14 @@ button.primary:hover{background:linear-gradient(180deg,#77eb98,#42b968)}
             <button class="kit-option" type="button" data-kit="purple" aria-label="Purple kit"><span class="kit-shirt" style="--kit:#9a67df"></span><span class="kit-name">Purple</span></button>
             <button class="kit-option" type="button" data-kit="white" aria-label="White kit"><span class="kit-shirt" style="--kit:#edf3f6"></span><span class="kit-name">White</span></button>
           </div>
-          <div class="kit-hint">SN30 Pro: ◀ ▶ choose • A kick off</div>
+          <div class="difficulty-picker-title">Difficulty</div>
+          <div class="difficulty-options" id="difficultyOptions" aria-label="Choose game difficulty">
+            <button class="difficulty-option" type="button" data-difficulty="easy"><span class="difficulty-name">Easy</span><span class="difficulty-count">3 defenders</span></button>
+            <button class="difficulty-option" type="button" data-difficulty="medium"><span class="difficulty-name">Medium</span><span class="difficulty-count">5 defenders</span></button>
+            <button class="difficulty-option" type="button" data-difficulty="hard"><span class="difficulty-name">Hard</span><span class="difficulty-count">7 defenders</span></button>
+            <button class="difficulty-option" type="button" data-difficulty="goat"><span class="difficulty-name">GOAT</span><span class="difficulty-count">10 defenders</span></button>
+          </div>
+          <div class="kit-hint">SN30 Pro: ◀ ▶ kit • ▲ ▼ difficulty • A kick off</div>
         </div>
       </div>
     </div>
@@ -210,14 +224,16 @@ button.primary:hover{background:linear-gradient(180deg,#77eb98,#42b968)}
 
       <div class="panel legend">
         <h3>Defenders</h3>
+        <div class="legend-row"><span class="swatch" style="color:#9ad7ff;background:#9ad7ff"></span><div><b>Difficulty</b><br>Easy 3 • Medium 5 • Hard 7 • GOAT 10 defenders.</div></div>
         <div class="legend-row"><span class="swatch" id="defSwatch0" style="color:#ff5f64;background:#ff5f64"></span><div><b>Rocco - The Presser</b><br>Comes straight for the ball.</div></div>
         <div class="legend-row"><span class="swatch" id="defSwatch1" style="color:#b877ff;background:#b877ff"></span><div><b>Milo - The Blocker</b><br>Runs ahead to cut off your route.</div></div>
         <div class="legend-row"><span class="swatch" id="defSwatch2" style="color:#ffb23f;background:#ffb23f"></span><div><b>Dex - The Sweeper</b><br>Chases from range, backs off up close.</div></div>
-        <div class="legend-row"><span class="swatch" id="defSwatch3" style="color:#34c6e8;background:#34c6e8"></span><div><b>Ziggy - The Wildcard</b><br>Tries unusual angles. Joins from level 2.</div></div>
+        <div class="legend-row"><span class="swatch" id="defSwatch3" style="color:#34c6e8;background:#34c6e8"></span><div><b>Ziggy - The Wildcard</b><br>Tries unusual angles. Higher difficulties add more defenders using this mix of roles.</div></div>
         <div class="legend-row"><span class="swatch" style="color:#ff6464;background:#ff6464;border-radius:3px"></span><div><b>Emergency Tunnels</b><br>Three tunnel pairs cross the pitch. Every use costs 1 life.</div></div>
         <div class="legend-row"><span class="swatch" style="color:#ffe36c;background:#ffe36c"></span><div><b>Star Boots</b><br>Four are always on the pitch. Collect one and another appears somewhere else. Each lasts 9.75 seconds.</div></div>
         <div class="legend-row"><span class="swatch" style="color:#ff9f43;background:#ff9f43;border-radius:3px"></span><div><b>Juice Turbo</b><br>Four bottles are hidden around each level. Each gives 1.5× speed for 6.5 seconds.</div></div>
         <div class="legend-row"><span class="swatch" style="color:#8a4f2b;background:#8a4f2b;border-radius:3px"></span><div><b>Chocolate Cupcakes</b><br>Four are always on the pitch. A cupcake slows you by the exact inverse of Juice Turbo for 6.5 seconds. Juice and cupcake effects cancel each other back to normal speed.</div></div>
+        <div class="legend-row"><span class="swatch" style="color:#dce5ec;background:#dce5ec;border-radius:2px"></span><div><b>Champions Trophy Bonus</b><br>Appears after cone milestones. Grab it for 750 points and a short turbo-dribble burst.</div></div>
         <div class="legend-row"><span class="swatch" style="color:#f4fff6;background:#f4fff6;border-radius:2px"></span><div><b>Goal</b><br>Always live. Touch any one of the three highlighted goal-mouth grid squares to score. A goal gives Star Boots + 1.5× Juice Turbo and then relocates safely.</div></div>
         <div class="keys">
           <div class="key"><b>SN30 Pro</b>D-pad / left stick</div>
@@ -246,6 +262,7 @@ const ui = {
   levelChip: document.getElementById('levelChip'), start: document.getElementById('startBtn'), pause: document.getElementById('pauseBtn'),
   sound: document.getElementById('soundBtn'), full: document.getElementById('fullBtn'),
   kitPicker: document.getElementById('kitPicker'), kitOptions: document.getElementById('kitOptions'),
+  difficultyOptions: document.getElementById('difficultyOptions'),
   touchController: document.getElementById('touchController'), touchDpad: document.getElementById('touchDpad'),
   touchStart: document.getElementById('touchStartBtn'), touchPause: document.getElementById('touchPauseBtn'),
   defSwatches: [0,1,2,3].map(i=>document.getElementById(`defSwatch${i}`))
@@ -303,6 +320,12 @@ const KIT_OPTIONS = [
   {id:'purple',name:'Purple',color:'#9a67df'},
   {id:'white',name:'White',color:'#edf3f6'}
 ];
+const DIFFICULTY_OPTIONS = [
+  {id:'easy',name:'Easy',defenders:3},
+  {id:'medium',name:'Medium',defenders:5},
+  {id:'hard',name:'Hard',defenders:7},
+  {id:'goat',name:'GOAT',defenders:10}
+];
 const DEFENDER_PALETTES = {
   blue:['#ff5f64','#b877ff','#ffb23f','#7ed957'],
   red:['#2e8ee6','#b877ff','#ffb23f','#34c6e8'],
@@ -315,7 +338,13 @@ const DEFENDER_DATA = [
   {name:'Rocco', color:'#ff5f64', spawn:[10,11], scatter:[19,1], type:0, release:900, number:4},
   {name:'Milo', color:'#b877ff', spawn:[9,11], scatter:[1,1], type:1, release:2600, number:5},
   {name:'Dex', color:'#ffb23f', spawn:[11,11], scatter:[1,20], type:2, release:4300, number:6},
-  {name:'Ziggy', color:'#34c6e8', spawn:[10,10], scatter:[19,20], type:3, release:5900, number:2}
+  {name:'Ziggy', color:'#34c6e8', spawn:[8,11], scatter:[19,20], type:3, release:5900, number:2},
+  {name:'Bruno', color:'#ff5f64', spawn:[12,11], scatter:[19,1], type:0, release:7200, number:8},
+  {name:'Kai', color:'#b877ff', spawn:[7,11], scatter:[1,1], type:1, release:8400, number:3},
+  {name:'Nico', color:'#ffb23f', spawn:[13,11], scatter:[1,20], type:2, release:9600, number:7},
+  {name:'Jax', color:'#34c6e8', spawn:[5,11], scatter:[19,20], type:3, release:10800, number:12},
+  {name:'Rio', color:'#ff5f64', spawn:[15,11], scatter:[19,1], type:0, release:12000, number:14},
+  {name:'Ace', color:'#b877ff', spawn:[4,11], scatter:[1,1], type:1, release:13200, number:15}
 ];
 
 const player = actor(...PLAYER_START, 5.35);
@@ -342,6 +371,7 @@ let burpBuffer = null;
 let burpBufferPromise = null;
 let pendingLevelTimer = 0, pendingLifeTimer = 0;
 let kitIndex = Math.max(0,KIT_OPTIONS.findIndex(x=>x.id===(localStorage.getItem('footballMazeKit')||'blue')));
+let difficultyIndex = Math.max(0,DIFFICULTY_OPTIONS.findIndex(x=>x.id===(localStorage.getItem('footballMazeDifficulty')||'easy')));
 
 function actor(x,y,speed){ return {x,y,nx:x,ny:y,p:0,d:'n',want:'l',speed}; }
 function k(x,y){ return x+','+y; }
@@ -370,13 +400,16 @@ function actorPos(a){
 }
 function resetActor(a,x,y,d='n'){ a.x=x;a.y=y;a.nx=x;a.ny=y;a.p=0;a.d=d;a.want=d; }
 function clearedCount(){ return GATE_SPOTS.length-gates.size; }
-function activeDefenders(){ return level===1 ? 3 : 4; }
+function currentDifficulty(){ return DIFFICULTY_OPTIONS[difficultyIndex] || DIFFICULTY_OPTIONS[0]; }
+function activeDefenders(){ return currentDifficulty().defenders; }
+function activeDefenderList(){ return defenders.slice(0,activeDefenders()); }
 function levelName(){ return LEVEL_NAMES[Math.min(level-1,LEVEL_NAMES.length-1)] || `Level ${level}`; }
 function currentKit(){ return KIT_OPTIONS[kitIndex] || KIT_OPTIONS[0]; }
 function syncKitPicker(){
-  const show=state==='ready'||state==='gameover';
+  const show=state==='ready'||state==='gameover'||state==='win';
   ui.kitPicker.hidden=!show;
   [...ui.kitOptions.querySelectorAll('.kit-option')].forEach((b,i)=>b.classList.toggle('selected',i===kitIndex));
+  [...ui.difficultyOptions.querySelectorAll('.difficulty-option')].forEach((b,i)=>b.classList.toggle('selected',i===difficultyIndex));
 }
 function applyKit(index,announce=false){
   kitIndex=(index+KIT_OPTIONS.length)%KIT_OPTIONS.length;
@@ -388,6 +421,16 @@ function applyKit(index,announce=false){
   if(announce && (state==='ready'||state==='gameover')) setMessage(`${kit.name} kit selected`,`Defenders have switched colours to avoid a clash. ${touchCapable?'Tap START':'Press A'} to kick off.`);
 }
 function cycleKit(step){ applyKit(kitIndex+step,true); sfx('kit'); }
+function applyDifficulty(index,announce=false){
+  difficultyIndex=(index+DIFFICULTY_OPTIONS.length)%DIFFICULTY_OPTIONS.length;
+  const difficulty=currentDifficulty();
+  localStorage.setItem('footballMazeDifficulty',difficulty.id);
+  syncKitPicker();
+  if(announce && (state==='ready'||state==='gameover'||state==='win')){
+    setMessage(`${difficulty.name} mode selected`,`${difficulty.defenders} defenders will be active. ${touchCapable?'Tap START':'Press A'} to kick off.`);
+  }
+}
+function cycleDifficulty(step){applyDifficulty(difficultyIndex+step,true);sfx('kit');}
 function goalMouthTiles(pos=goal){
   return [[pos[0]-1,pos[1]],[pos[0],pos[1]],[pos[0]+1,pos[1]]];
 }
@@ -434,8 +477,8 @@ function goalCandidates(){
   const gateKeys=new Set(gates);
   const actorKeys=new Set([
     k(...PLAYER_START),
-    ...defenders.map(d=>k(...d.spawn)),
-    ...defenders.map(d=>k(d.x,d.y))
+    ...activeDefenderList().map(d=>k(...d.spawn)),
+    ...activeDefenderList().map(d=>k(d.x,d.y))
   ]);
   const reachable=reachableOpenKeys();
   const oldKey=k(...goal);
@@ -465,7 +508,7 @@ function moveGoalRandom(){
   return true;
 }
 function starCandidates(){
-  const blocked=new Set([...goalBlockedKeys(),k(...PLAYER_START),...defenders.map(d=>k(...d.spawn))]);
+  const blocked=new Set([...goalBlockedKeys(),k(...PLAYER_START),...activeDefenderList().map(d=>k(...d.spawn))]);
   const out=[];
   for(let y=1;y<ROWS-1;y++) for(let x=1;x<COLS-1;x++){
     const key=k(x,y);
@@ -488,7 +531,7 @@ function fillStarBoots(){
   while(stars.size<STAR_COUNT && guard++<100) if(!spawnRandomStar()) break;
 }
 function juiceCandidates(){
-  const blocked=new Set([...goalBlockedKeys(),k(...PLAYER_START),...defenders.map(d=>k(...d.spawn))]);
+  const blocked=new Set([...goalBlockedKeys(),k(...PLAYER_START),...activeDefenderList().map(d=>k(...d.spawn))]);
   const out=[];
   for(let y=1;y<ROWS-1;y++) for(let x=1;x<COLS-1;x++){
     const key=k(x,y);
@@ -511,7 +554,7 @@ function fillJuices(){
   while(juices.size<JUICE_COUNT && guard++<100) if(!spawnRandomJuice()) break;
 }
 function cupcakeCandidates(){
-  const blocked=new Set([...goalBlockedKeys(),k(...PLAYER_START),...defenders.map(d=>k(...d.spawn))]);
+  const blocked=new Set([...goalBlockedKeys(),k(...PLAYER_START),...activeDefenderList().map(d=>k(...d.spawn))]);
   const out=[];
   for(let y=1;y<ROWS-1;y++) for(let x=1;x<COLS-1;x++){
     const key=k(x,y);
@@ -566,7 +609,7 @@ function setupLevel(){
   resetActor(player,...PLAYER_START,'l');
   defenders.forEach(d=>{resetActor(d,...d.spawn);d.benchUntil=0;});
   roundStarted=modeStarted=performance.now();modeIndex=0;mode='scatter';shieldUntil=performance.now()+1900;
-  setMessage('Collect every cone set to win!', level===1?'Any one highlighted goal tile scores. Watch for four chocolate cupcakes.':'Any one highlighted goal tile scores. Watch all four defenders and the cupcakes.');
+  setMessage('Collect every cone set to win!', `${currentDifficulty().name} mode: ${activeDefenders()} defenders. Any one highlighted goal tile scores. Watch for four chocolate cupcakes.`);
   updateHud();
 }
 function newGame(){
@@ -627,7 +670,13 @@ document.addEventListener('fullscreenchange',syncFullscreenUi);
 document.addEventListener('webkitfullscreenchange',syncFullscreenUi);
 
 function setDirection(d){
-  if(state==='ready'||state==='gameover'){ if(d==='l'||d==='u') cycleKit(-1); else if(d==='r'||d==='d') cycleKit(1); return; }
+  if(state==='ready'||state==='gameover'||state==='win'){
+    if(d==='l') cycleKit(-1);
+    else if(d==='r') cycleKit(1);
+    else if(d==='u') cycleDifficulty(-1);
+    else if(d==='d') cycleDifficulty(1);
+    return;
+  }
   player.want=d;
   if(state!=='play') return;
   if(player.d!=='n' && OPP[player.d]===d && player.p>0){
@@ -734,7 +783,7 @@ function maybeSpawnBonus(t){
       const spots=BONUS_SPOTS.filter(p=>!isWall(...p));
       const spot=spots[(level*3+trigger)%spots.length];
       bonus={x:spot[0],y:spot[1],until:t+9500,phase:0};
-      setMessage('Golden Ball bonus!', 'Grab it before it disappears for turbo dribbling and 750 points.');
+      setMessage('Champions Trophy bonus!', 'Grab the trophy before it disappears for turbo dribbling and 750 points.');
       sfx('bonus');
       break;
     }
@@ -789,8 +838,8 @@ function playerArrived(t){
   if(bonus && player.x===bonus.x && player.y===bonus.y){
     score+=750; sprintUntil=t+4200; bonus=null;
     burst((player.x+.5)*TILE,(player.y+.5)*TILE,'#ffd653',28,180);
-    floater((player.x+.5)*TILE,(player.y+.15)*TILE,'GOLDEN BALL +750','#ffe892');
-    setMessage('Turbo dribble!', 'Golden Ball gives you a short burst of speed.');sfx('golden');rumble(.18,100);updateHud();
+    floater((player.x+.5)*TILE,(player.y+.15)*TILE,'TROPHY +750','#e9f3ff');
+    setMessage('Champions Trophy!', 'The trophy gives you a short burst of turbo dribbling.');sfx('golden');rumble(.18,100);updateHud();
   }
   registerGoalTile(player.x,player.y,t);
 }
@@ -1145,6 +1194,10 @@ ui.kitOptions.addEventListener('click',e=>{
   const b=e.target.closest('.kit-option');if(!b)return;
   const i=KIT_OPTIONS.findIndex(x=>x.id===b.dataset.kit);if(i>=0){ensureAudio();applyKit(i,true);sfx('kit');app.focus();}
 });
+ui.difficultyOptions.addEventListener('click',e=>{
+  const b=e.target.closest('.difficulty-option');if(!b)return;
+  const i=DIFFICULTY_OPTIONS.findIndex(x=>x.id===b.dataset.difficulty);if(i>=0){ensureAudio();applyDifficulty(i,true);sfx('kit');app.focus();}
+});
 
 function roundedRect(x,y,w,h,r){ctx.beginPath();ctx.roundRect(x,y,w,h,r);}
 function drawPitch(t){
@@ -1248,7 +1301,80 @@ function drawGoal(t){
   ctx.restore();
 }
 function drawBonus(t){
-  if(!bonus||bonus.until<t)return;bonus.phase+=.04;const cx=(bonus.x+.5)*TILE,cy=(bonus.y+.5)*TILE;const a=.78+.22*Math.sin(t/120);ctx.save();ctx.translate(cx,cy);ctx.shadowColor='#ffd653';ctx.shadowBlur=18;ctx.fillStyle=`rgba(255,214,83,${a})`;ctx.beginPath();ctx.arc(0,0,13,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;drawBallAt(0,0,9,t/160,true);ctx.fillStyle='#fff2ad';ctx.font='900 8px system-ui';ctx.textAlign='center';ctx.fillText('BONUS',0,24);ctx.restore();
+  if(!bonus||bonus.until<t)return;
+  bonus.phase+=.04;
+  const cx=(bonus.x+.5)*TILE,cy=(bonus.y+.5)*TILE;
+  const bob=Math.sin(t/180)*1.2;
+  const pulse=.72+.28*Math.sin(t/125);
+
+  ctx.save();
+  ctx.translate(cx,cy+bob);
+  ctx.shadowColor=`rgba(215,235,255,${.55+.35*pulse})`;
+  ctx.shadowBlur=16;
+
+  const silver=ctx.createLinearGradient(-18,-16,18,14);
+  silver.addColorStop(0,'#7e8991');
+  silver.addColorStop(.18,'#f8fbfd');
+  silver.addColorStop(.42,'#aab4bb');
+  silver.addColorStop(.66,'#ffffff');
+  silver.addColorStop(1,'#77838c');
+
+  ctx.strokeStyle=silver;
+  ctx.lineWidth=3.2;
+  ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(-9,-9);
+  ctx.bezierCurveTo(-18,-18,-20,-5,-15,3);
+  ctx.bezierCurveTo(-13,6,-11,3,-8,1);
+  ctx.moveTo(9,-9);
+  ctx.bezierCurveTo(18,-18,20,-5,15,3);
+  ctx.bezierCurveTo(13,6,11,3,8,1);
+  ctx.stroke();
+
+  ctx.fillStyle=silver;
+  ctx.beginPath();
+  ctx.moveTo(-10,-9);
+  ctx.lineTo(10,-9);
+  ctx.bezierCurveTo(10,0,8,5,5,7);
+  ctx.lineTo(-5,7);
+  ctx.bezierCurveTo(-8,5,-10,0,-10,-9);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle='#f7fafc';
+  roundedRect(-11,-11,22,3.5,1.8);
+  ctx.fill();
+  ctx.fillStyle='#8b969f';
+  ctx.fillRect(-1.8,6,3.6,4);
+  ctx.fillStyle=silver;
+  roundedRect(-7,9,14,3,1.4);
+  ctx.fill();
+  roundedRect(-11,12,22,4,1.5);
+  ctx.fill();
+
+  ctx.shadowBlur=0;
+  ctx.fillStyle='#1a2d63';
+  ctx.beginPath();
+  ctx.arc(0,-2,3.4,0,Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle='#ffffff';
+  starPath(0,-2,2.1,.85);
+  ctx.fill();
+
+  ctx.strokeStyle='rgba(255,255,255,.88)';
+  ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(-5,-7);ctx.lineTo(-2,-4);
+  ctx.moveTo(4,-6);ctx.lineTo(6,-4);
+  ctx.stroke();
+
+  ctx.fillStyle='#eaf3ff';
+  ctx.font='900 7px system-ui';
+  ctx.textAlign='center';
+  ctx.shadowColor='rgba(0,0,0,.75)';
+  ctx.shadowBlur=3;
+  ctx.fillText('TROPHY',0,23);
+  ctx.restore();
 }
 function drawBallAt(x,y,r,rot,gold=false){
   ctx.save();ctx.translate(x,y);ctx.rotate(rot);ctx.fillStyle=gold?'#ffdf54':'#f9fbff';ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.strokeStyle=gold?'#8d6f00':'#18222b';ctx.lineWidth=Math.max(1,r*.12);ctx.stroke();ctx.fillStyle=gold?'#8d6f00':'#17212a';ctx.beginPath();for(let i=0;i<5;i++){const a=-Math.PI/2+i*Math.PI*2/5,px=Math.cos(a)*r*.28,py=Math.sin(a)*r*.28;i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.closePath();ctx.fill();ctx.restore();
@@ -1362,7 +1488,7 @@ function gameLoop(t){
   updateEffects(dt);render(t);requestAnimationFrame(gameLoop);
 }
 
-setupLevel();state='ready';applyKit(kitIndex,false);syncKitPicker();updateHud();fitBoard();pollGamepad();requestAnimationFrame(gameLoop);
+setupLevel();state='ready';applyKit(kitIndex,false);applyDifficulty(difficultyIndex,false);syncKitPicker();updateHud();fitBoard();pollGamepad();requestAnimationFrame(gameLoop);
 })();
 </script>
 </body>
