@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Football Maze">
 <link rel="manifest" href="manifest.webmanifest">
-<title>Football Maze - Touch Edition v13</title>
+<title>Football Maze - Touch Edition v14</title>
 <style>
 :root{
   color-scheme:dark;
@@ -150,7 +150,7 @@ button.primary:hover{background:linear-gradient(180deg,#77eb98,#42b968)}
       <div class="hud-card"><small>Lives</small><span id="lives">⚽ ⚽ ⚽ ⚽ ⚽</span></div>
       <div class="hud-card"><small>Level</small><span id="level">1</span></div>
       <div class="hud-card score"><small>Score</small><span id="score">0</span></div>
-      <div class="hud-card"><small>Gates</small><span id="gates">0 / 30</span></div>
+      <div class="hud-card"><small>Cones</small><span id="gates">0 / 30</span></div>
       <div class="hud-card"><small>Streak</small><span id="streak">x1</span></div>
     </div>
     <div class="pad-pill" id="padPill"><span class="pad-dot"></span><span id="padText">Controller: press a button</span></div>
@@ -204,8 +204,8 @@ button.primary:hover{background:linear-gradient(180deg,#77eb98,#42b968)}
       <div class="panel">
         <div class="level-chip" id="levelChip">Training Ground</div>
         <p class="status-title">Match update</p>
-        <p id="message">Dribble through checkpoints and cross all three goal squares to score.</p>
-        <p id="subMessage">The goal is always live. Cross all three highlighted goal-mouth squares in one pass for Star Boots + 1.5× Juice Turbo, then the goal moves. Emergency tunnels cost 1 life.</p>
+        <p id="message">Collect every cone set to win the maze. Any one goal tile scores.</p>
+        <p id="subMessage">Juice gives 1.5× speed. Chocolate cupcakes apply the exact opposite slow-down and respawn when eaten. Emergency tunnels cost 1 life.</p>
       </div>
 
       <div class="panel legend">
@@ -217,7 +217,8 @@ button.primary:hover{background:linear-gradient(180deg,#77eb98,#42b968)}
         <div class="legend-row"><span class="swatch" style="color:#ff6464;background:#ff6464;border-radius:3px"></span><div><b>Emergency Tunnels</b><br>Three tunnel pairs cross the pitch. Every use costs 1 life.</div></div>
         <div class="legend-row"><span class="swatch" style="color:#ffe36c;background:#ffe36c"></span><div><b>Star Boots</b><br>Four are always on the pitch. Collect one and another appears somewhere else. Each lasts 9.75 seconds.</div></div>
         <div class="legend-row"><span class="swatch" style="color:#ff9f43;background:#ff9f43;border-radius:3px"></span><div><b>Juice Turbo</b><br>Four bottles are hidden around each level. Each gives 1.5× speed for 6.5 seconds.</div></div>
-        <div class="legend-row"><span class="swatch" style="color:#f4fff6;background:#f4fff6;border-radius:2px"></span><div><b>Goal</b><br>Always live. Cross all three highlighted goal-mouth grid squares consecutively. A goal gives Star Boots + 1.5× Juice Turbo and then relocates safely.</div></div>
+        <div class="legend-row"><span class="swatch" style="color:#8a4f2b;background:#8a4f2b;border-radius:3px"></span><div><b>Chocolate Cupcakes</b><br>Four are always on the pitch. A cupcake slows you by the exact inverse of Juice Turbo for 6.5 seconds. Juice and cupcake effects cancel each other back to normal speed.</div></div>
+        <div class="legend-row"><span class="swatch" style="color:#f4fff6;background:#f4fff6;border-radius:2px"></span><div><b>Goal</b><br>Always live. Touch any one of the three highlighted goal-mouth grid squares to score. A goal gives Star Boots + 1.5× Juice Turbo and then relocates safely.</div></div>
         <div class="keys">
           <div class="key"><b>SN30 Pro</b>D-pad / left stick</div>
           <div class="key"><b>A button</b>Start / continue</div>
@@ -280,10 +281,13 @@ const MAP = [
 const GATE_SPOTS = [[2,1],[8,1],[12,1],[18,1],[1,3],[5,3],[10,3],[15,3],[19,3],[3,5],[8,5],[12,5],[17,5],[2,7],[6,7],[14,7],[18,7],[3,9],[10,9],[17,9],[2,11],[6,11],[14,11],[18,11],[3,13],[10,13],[17,13],[3,19],[8,19],[17,19]];
 const STAR_COUNT = 4;
 const JUICE_COUNT = 4;
+const CUPCAKE_COUNT = 4;
 const ORIGINAL_STAR_POWER_MS = 6500;
 const STAR_POWER_MS = ORIGINAL_STAR_POWER_MS * 1.5;
 const JUICE_SPEED_MS = ORIGINAL_STAR_POWER_MS;
 const JUICE_SPEED_MULT = 1.5;
+const CUPCAKE_SLOW_MS = JUICE_SPEED_MS;
+const CUPCAKE_SPEED_MULT = 1 / JUICE_SPEED_MULT;
 const BONUS_SPOTS = [[10,7],[10,9],[10,13],[10,15],[6,3],[14,3],[6,19],[14,19]];
 let goal = [10,1];
 const PLAYER_START = [10,20];
@@ -318,7 +322,7 @@ const player = actor(...PLAYER_START, 5.35);
 const defenders = DEFENDER_DATA.map(d => Object.assign(actor(...d.spawn, 3.52), d, {benchUntil:0}));
 let state = 'ready';
 let level = 1, lives = 5, score = 0, best = Number(localStorage.getItem('footballMazeBest') || 0);
-let gates = new Set(), stars = new Set(), juices = new Set(), powerUntil = 0, shieldUntil = 0, sprintUntil = 0, juiceSpeedUntil = 0;
+let gates = new Set(), stars = new Set(), juices = new Set(), cupcakes = new Set(), powerUntil = 0, shieldUntil = 0, sprintUntil = 0, juiceSpeedUntil = 0, cupcakeSlowUntil = 0;
 let roundStarted = 0, modeStarted = 0, modeIndex = 0, mode = 'scatter';
 let bonus = null, bonusTriggers = new Set();
 let combo = 1, lastGateAt = 0, lastFrame = performance.now();
@@ -399,7 +403,7 @@ function registerGoalTile(x,y,t){
     burst((x+.5)*TILE,(y+.5)*TILE,'#dfffe7',8,70);
     sfx('goalTick');
   }
-  if(goalCrossedTiles.size===goalMouthTiles().length){
+  if(goalCrossedTiles.size>=1){
     scoreGoal(t);
   }
 }
@@ -433,7 +437,7 @@ function goalCandidates(){
       const mouth=[[x-1,y],[x,y],[x+1,y]];
       if(mouth.some(p=>isWall(...p))) continue;
       if(mouth.some(p=>!reachable.has(k(...p)))) continue;
-      if(mouth.some(p=>gateKeys.has(k(...p))||actorKeys.has(k(...p))||stars.has(k(...p))||juices.has(k(...p)))) continue;
+      if(mouth.some(p=>gateKeys.has(k(...p))||actorKeys.has(k(...p))||stars.has(k(...p))||juices.has(k(...p))||cupcakes.has(k(...p)))) continue;
       if(bonus && mouth.some(p=>bonus.x===p[0]&&bonus.y===p[1])) continue;
       if(mouth.some(p=>player.x===p[0]&&player.y===p[1])) continue;
       if(k(x,y)===oldKey) continue;
@@ -456,7 +460,7 @@ function starCandidates(){
   const out=[];
   for(let y=1;y<ROWS-1;y++) for(let x=1;x<COLS-1;x++){
     const key=k(x,y);
-    if(isWall(x,y)||blocked.has(key)||gates.has(key)||stars.has(key)||juices.has(key)) continue;
+    if(isWall(x,y)||blocked.has(key)||gates.has(key)||stars.has(key)||juices.has(key)||cupcakes.has(key)) continue;
     if(bonus && bonus.x===x && bonus.y===y) continue;
     if(player.x===x && player.y===y) continue;
     out.push([x,y]);
@@ -479,7 +483,7 @@ function juiceCandidates(){
   const out=[];
   for(let y=1;y<ROWS-1;y++) for(let x=1;x<COLS-1;x++){
     const key=k(x,y);
-    if(isWall(x,y)||blocked.has(key)||gates.has(key)||stars.has(key)||juices.has(key)) continue;
+    if(isWall(x,y)||blocked.has(key)||gates.has(key)||stars.has(key)||juices.has(key)||cupcakes.has(key)) continue;
     if(bonus && bonus.x===x && bonus.y===y) continue;
     if(player.x===x && player.y===y) continue;
     out.push([x,y]);
@@ -496,6 +500,29 @@ function spawnRandomJuice(){
 function fillJuices(){
   let guard=0;
   while(juices.size<JUICE_COUNT && guard++<100) if(!spawnRandomJuice()) break;
+}
+function cupcakeCandidates(){
+  const blocked=new Set([...goalBlockedKeys(),k(...PLAYER_START),...defenders.map(d=>k(...d.spawn))]);
+  const out=[];
+  for(let y=1;y<ROWS-1;y++) for(let x=1;x<COLS-1;x++){
+    const key=k(x,y);
+    if(isWall(x,y)||blocked.has(key)||gates.has(key)||stars.has(key)||juices.has(key)||cupcakes.has(key)) continue;
+    if(bonus && bonus.x===x && bonus.y===y) continue;
+    if(player.x===x && player.y===y) continue;
+    out.push([x,y]);
+  }
+  return out;
+}
+function spawnRandomCupcake(){
+  const spots=cupcakeCandidates();
+  if(!spots.length) return false;
+  const spot=spots[Math.floor(Math.random()*spots.length)];
+  cupcakes.add(k(...spot));
+  return true;
+}
+function fillCupcakes(){
+  let guard=0;
+  while(cupcakes.size<CUPCAKE_COUNT && guard++<100) if(!spawnRandomCupcake()) break;
 }
 
 function fitBoard(){
@@ -524,13 +551,13 @@ function updateHud(){
 }
 function setupLevel(){
   gates = new Set(GATE_SPOTS.map(p=>k(...p)));
-  stars = new Set(); juices = new Set(); fillStarBoots(); fillJuices();
-  powerUntil=0; sprintUntil=0; juiceSpeedUntil=0; goalCooldownUntil=0; resetGoalCrossing(); bonus=null; bonusTriggers=new Set(); combo=1; lastGateAt=0;
+  stars = new Set(); juices = new Set(); cupcakes = new Set(); fillStarBoots(); fillJuices(); fillCupcakes();
+  powerUntil=0; sprintUntil=0; juiceSpeedUntil=0; cupcakeSlowUntil=0; goalCooldownUntil=0; resetGoalCrossing(); bonus=null; bonusTriggers=new Set(); combo=1; lastGateAt=0;
   particles=[]; floaters=[]; shake=0; flash=0;
   resetActor(player,...PLAYER_START,'l');
   defenders.forEach(d=>{resetActor(d,...d.spawn);d.benchUntil=0;});
   roundStarted=modeStarted=performance.now();modeIndex=0;mode='scatter';shieldUntil=performance.now()+1900;
-  setMessage('Dribble, collect and score!', level===1?'Cross all three squares inside the goal mouth to score. Three defenders to start.':'Cross all three goal-mouth squares in one pass to score. Watch all four defenders.');
+  setMessage('Collect every cone set to win!', level===1?'Any one highlighted goal tile scores. Watch for four chocolate cupcakes.':'Any one highlighted goal tile scores. Watch all four defenders and the cupcakes.');
   updateHud();
 }
 function newGame(){
@@ -559,7 +586,7 @@ function requestPreferredFullscreen(){
 function startOrContinue(){
   requestPreferredFullscreen();
   ensureAudio();
-  if(state==='ready'||state==='gameover'){newGame();return;}
+  if(state==='ready'||state==='gameover'||state==='win'){newGame();return;}
   if(state==='pause'){togglePause();return;}
   if(state==='clear'||state==='hit') return;
 }
@@ -704,6 +731,18 @@ function maybeSpawnBonus(t){
     }
   }
 }
+function winMaze(t){
+  if(state!=='play') return;
+  state='win';
+  player.d='n';player.want='n';
+  shake=8;flash=.9;
+  burst((player.x+.5)*TILE,(player.y+.5)*TILE,'#ffd653',42,240);
+  burst((player.x+.5)*TILE,(player.y+.5)*TILE,'#ffffff',30,210);
+  floater((player.x+.5)*TILE,(player.y-.15)*TILE,'MAZE WON!','#fff4a8');
+  setMessage('MAZE COMPLETE!',`You collected all ${GATE_SPOTS.length} cone sets. Press A to play again.`);
+  ui.start.textContent='Play again';
+  sfx('win');rumble(.5,260);updateHud();
+}
 function playerArrived(t){
   const key=k(player.x,player.y);
   if(gates.delete(key)){
@@ -713,7 +752,7 @@ function playerArrived(t){
     burst((player.x+.5)*TILE,(player.y+.5)*TILE,'#ff9d45',9,90);
     floater((player.x+.5)*TILE,(player.y+.25)*TILE,combo>1?`+${pts}  STREAK x${combo}`:`+${pts}`,'#ffe6a6');
     sfx('gate',combo); rumble(.08,55);
-    if(!gates.size){score+=500; setMessage('All gates cleared!', 'Checkpoint bonus! The goal is always live - cross all three goal squares to score.');sfx('readyGoal');}
+    if(!gates.size){score+=500;updateHud();winMaze(t);return;}
     updateHud();
   }
   if(stars.delete(key)){
@@ -724,10 +763,19 @@ function playerArrived(t){
     setMessage('STAR BOOTS!', 'Defenders are vulnerable. Dribble into them for a nutmeg!');sfx('power');rumble(.16,90);updateHud();
   }
   if(juices.delete(key)){
-    juiceSpeedUntil=t+JUICE_SPEED_MS;score+=100;
+    const cancelledCupcake=cupcakeSlowUntil>t;if(cancelledCupcake){cupcakeSlowUntil=0;juiceSpeedUntil=0;}else{juiceSpeedUntil=t+JUICE_SPEED_MS;cupcakeSlowUntil=0;}score+=100;
     burst((player.x+.5)*TILE,(player.y+.5)*TILE,'#ff9f43',24,170);
     floater((player.x+.5)*TILE,(player.y+.16)*TILE,'JUICE TURBO! 1.5×','#ffd4a3');
-    setMessage('JUICE TURBO!', '1.5× speed for 6.5 seconds - watch the turbo gauge!');sfx('juice');rumble(.18,95);updateHud();
+    setMessage('JUICE TURBO!', cancelledCupcake?'Cupcake slow cancelled - back to normal speed.':'1.5× speed for 6.5 seconds - watch the turbo gauge!');sfx('juice');rumble(.18,95);updateHud();
+  }
+  if(cupcakes.delete(key)){
+    fillCupcakes();
+    const cancelledTurbo=juiceSpeedUntil>t;
+    if(cancelledTurbo){juiceSpeedUntil=0;cupcakeSlowUntil=0;}else{cupcakeSlowUntil=t+CUPCAKE_SLOW_MS;juiceSpeedUntil=0;}
+    burst((player.x+.5)*TILE,(player.y+.5)*TILE,'#8a4f2b',20,135);
+    floater((player.x+.5)*TILE,(player.y+.16)*TILE,cancelledTurbo?'BURP!  BACK TO NORMAL':'BURP!  SLOWED','#f1c49a');
+    setMessage('CHOCOLATE CUPCAKE!', cancelledTurbo?'The cupcake cancelled Juice Turbo - back to normal speed.':'Slowed to 1/1.5× speed for 6.5 seconds.');
+    sfx('burp');rumble(.12,85);updateHud();
   }
   if(bonus && player.x===bonus.x && player.y===bonus.y){
     score+=750; sprintUntil=t+4200; bonus=null;
@@ -738,7 +786,7 @@ function playerArrived(t){
   registerGoalTile(player.x,player.y,t);
 }
 function scoreGoal(t){
-  if(t<goalCooldownUntil || goalCrossedTiles.size<goalMouthTiles().length) return;
+  if(t<goalCooldownUntil || goalCrossedTiles.size<1) return;
   const scoredGoal=[...goal];
   const scoredTiles=goalMouthTiles(scoredGoal);
   resetGoalCrossing();
@@ -748,6 +796,7 @@ function scoreGoal(t){
   // Every goal grants fresh, full-duration boosts. Juice is always exactly 1.5×.
   powerUntil=t+STAR_POWER_MS;
   juiceSpeedUntil=t+JUICE_SPEED_MS;
+  cupcakeSlowUntil=0;
   sprintUntil=0;
   reverseDefenders();
 
@@ -826,6 +875,8 @@ function sfx(type,n=1){
   else if(type==='bonus'){tone(710,.09,'sine',.03,910);tone(910,.12,'sine',.03,1110,.1);}
   else if(type==='golden'){tone(520,.1,'triangle',.04,780);tone(780,.1,'triangle',.04,1040,.09);tone(1040,.2,'triangle',.05,1320,.18);}
   else if(type==='juice'){tone(360,.08,'square',.035,690);tone(690,.09,'triangle',.04,980,.06);tone(980,.14,'sine',.04,1320,.13);}
+  else if(type==='burp'){noise(.11,.022);tone(165,.08,'sawtooth',.045,108);tone(112,.15,'triangle',.04,58,.055);}
+  else if(type==='win'){tone(523,.12,'triangle',.04,659);tone(659,.12,'triangle',.04,784,.1);tone(784,.15,'triangle',.045,1047,.2);tone(1047,.28,'sine',.05,1319,.31);}
   else if(type==='nutmeg'){tone(280,.07,'square',.04,520);tone(650,.12,'triangle',.035,900,.06);}
   else if(type==='tackle'){noise(.16,.05);tone(145,.18,'sawtooth',.055,72);}
   else if(type==='tunnel'){noise(.12,.035);tone(420,.10,'square',.045,250);tone(250,.18,'triangle',.04,120,.08);}
@@ -1073,13 +1124,26 @@ function drawJuice(x,y,t){
   ctx.fillStyle='#ffd8a9';ctx.font='900 7px system-ui';ctx.fillText('JUICE',0,20);
   ctx.restore();
 }
+function drawCupcake(x,y,t){
+  const cx=(x+.5)*TILE,cy=(y+.5)*TILE;
+  const bob=Math.sin(t/205+x*.7+y*.45)*1.6;
+  ctx.save();ctx.translate(cx,cy+bob);
+  ctx.fillStyle='rgba(0,0,0,.28)';ctx.beginPath();ctx.ellipse(0,13,10,4,0,0,Math.PI*2);ctx.fill();
+  ctx.shadowColor='#8a4f2b';ctx.shadowBlur=11;
+  ctx.fillStyle='#6f3f27';ctx.beginPath();ctx.moveTo(-10,-2);ctx.lineTo(9,-2);ctx.lineTo(7,13);ctx.lineTo(-7,13);ctx.closePath();ctx.fill();ctx.shadowBlur=0;
+  ctx.strokeStyle='#d58a5a';ctx.lineWidth=1.2;for(let x=-6;x<=6;x+=4){ctx.beginPath();ctx.moveTo(x,-1);ctx.lineTo(x*.72,11);ctx.stroke();}
+  ctx.fillStyle='#4b2418';ctx.beginPath();ctx.arc(0,-4,10,Math.PI,Math.PI*2);ctx.arc(-4,-5,6,Math.PI,Math.PI*2);ctx.arc(4,-6,6,Math.PI,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#7f4930';ctx.beginPath();ctx.arc(-3,-8,3,0,Math.PI*2);ctx.arc(4,-9,2.6,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#f4d5bd';ctx.font='900 7px system-ui';ctx.textAlign='center';ctx.fillText('CUPCAKE',0,22);
+  ctx.restore();
+}
 function drawGoal(t){
   const cx=(goal[0]+.5)*TILE, cy=(goal[1]+.5)*TILE;
   const glow=12+8*Math.sin(t/150);
   const halfW=TILE*1.5;
   ctx.save();ctx.translate(cx,cy);
 
-  // The three highlighted floor squares are the actual scoring footprint.
+  // Any one of the three highlighted floor squares scores a goal.
   for(let dx=-1;dx<=1;dx++){
     const tileKey=k(goal[0]+dx,goal[1]);
     const crossed=goalCrossedTiles.has(tileKey);
@@ -1097,7 +1161,7 @@ function drawGoal(t){
   for(let x=-halfW+6;x<=halfW-6;x+=8){ctx.beginPath();ctx.moveTo(x,-10);ctx.lineTo(x,12);ctx.stroke();}
   for(let y=-6;y<=10;y+=5){ctx.beginPath();ctx.moveTo(-halfW+2,y);ctx.lineTo(halfW-2,y);ctx.stroke();}
   ctx.shadowBlur=0;
-  ctx.fillStyle='#fff7ae';ctx.font='900 8px system-ui';ctx.textAlign='center';ctx.fillText(`${goalCrossedTiles.size}/3 - CROSS ALL 3`,0,29);
+  ctx.fillStyle='#fff7ae';ctx.font='900 8px system-ui';ctx.textAlign='center';ctx.fillText('TOUCH ANY 1 TILE',0,29);
   ctx.restore();
 }
 function drawBonus(t){
@@ -1156,6 +1220,7 @@ function drawEffects(){
 function drawPowerBar(t){
   const starActive=powerUntil>t;
   const speedActive=juiceSpeedUntil>t;
+  const slowActive=cupcakeSlowUntil>t;
   if(starActive){
     const left=clamp((powerUntil-t)/STAR_POWER_MS,0,1);
     ctx.fillStyle='rgba(0,0,0,.42)';roundedRect(245,12,350,10,5);ctx.fill();
@@ -1170,26 +1235,34 @@ function drawPowerBar(t){
     ctx.strokeStyle='rgba(255,255,255,.65)';ctx.lineWidth=1;roundedRect(245,y,350,11,5.5);ctx.stroke();
     ctx.fillStyle='#fff';ctx.font='900 10px system-ui';ctx.textAlign='center';ctx.fillText(`JUICE TURBO 1.5×  ${(Math.max(0,juiceSpeedUntil-t)/1000).toFixed(1)}s`,420,y+25);
   }
+  if(slowActive){
+    const y=starActive?48:12;
+    const left=clamp((cupcakeSlowUntil-t)/CUPCAKE_SLOW_MS,0,1);
+    ctx.fillStyle='rgba(0,0,0,.42)';roundedRect(245,y,350,11,5.5);ctx.fill();
+    ctx.fillStyle='#8a4f2b';roundedRect(245,y,350*left,11,5.5);ctx.fill();
+    ctx.strokeStyle='rgba(255,255,255,.65)';ctx.lineWidth=1;roundedRect(245,y,350,11,5.5);ctx.stroke();
+    ctx.fillStyle='#fff';ctx.font='900 10px system-ui';ctx.textAlign='center';ctx.fillText(`CUPCAKE SLOW 1/1.5×  ${(Math.max(0,cupcakeSlowUntil-t)/1000).toFixed(1)}s`,420,y+25);
+  }
 }
 function drawOverlay(t){
   if(state==='play')return;ctx.fillStyle='rgba(3,9,14,.62)';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.textAlign='center';ctx.fillStyle='#fff';
   if(state==='ready'){
-    ctx.font='900 44px system-ui';ctx.fillText('FOOTBALL MAZE',420,318);ctx.fillStyle='#9feab6';ctx.font='800 20px system-ui';ctx.fillText('DRIBBLE • DODGE • SCORE',420,354);ctx.fillStyle='#d7e4ec';ctx.font='700 17px system-ui';ctx.fillText(gamepad?'PRESS A TO KICK OFF':touchCapable?'TAP START TO KICK OFF':'PRESS ENTER TO KICK OFF',420,398);ctx.fillStyle=currentKit().color;ctx.font='900 15px system-ui';ctx.fillText(`${currentKit().name.toUpperCase()} KIT`,420,430);ctx.fillStyle='#91a9b8';ctx.font='600 13px system-ui';ctx.fillText(`BEST ${best.toLocaleString()}  •  5 LIVES  •  4 STAR BOOTS  •  4 JUICES`,420,458);
+    ctx.font='900 44px system-ui';ctx.fillText('FOOTBALL MAZE',420,318);ctx.fillStyle='#9feab6';ctx.font='800 20px system-ui';ctx.fillText('DRIBBLE • DODGE • SCORE',420,354);ctx.fillStyle='#d7e4ec';ctx.font='700 17px system-ui';ctx.fillText(gamepad?'PRESS A TO KICK OFF':touchCapable?'TAP START TO KICK OFF':'PRESS ENTER TO KICK OFF',420,398);ctx.fillStyle=currentKit().color;ctx.font='900 15px system-ui';ctx.fillText(`${currentKit().name.toUpperCase()} KIT`,420,430);ctx.fillStyle='#91a9b8';ctx.font='600 13px system-ui';ctx.fillText(`BEST ${best.toLocaleString()}  •  5 LIVES  •  4 STAR BOOTS  •  4 JUICES  •  4 CUPCAKES`,420,458);
   } else {
-    const title=state==='pause'?'PAUSED':state==='gameover'?'FULL TIME':state==='clear'?'GOAL!':'TACKLED!';ctx.font='900 46px system-ui';ctx.fillText(title,420,415);
-    if(state==='gameover'){ctx.fillStyle='#d5e4ed';ctx.font='700 18px system-ui';ctx.fillText('Press A to play again',420,455);}
+    const title=state==='pause'?'PAUSED':state==='gameover'?'FULL TIME':state==='win'?'MAZE WON!':state==='clear'?'GOAL!':'TACKLED!';ctx.font='900 46px system-ui';ctx.fillText(title,420,415);
+    if(state==='gameover'||state==='win'){ctx.fillStyle='#d5e4ed';ctx.font='700 18px system-ui';ctx.fillText(state==='win'?`All ${GATE_SPOTS.length} cone sets collected - press A to play again`:'Press A to play again',420,455);}
   }
 }
 function render(t){
   ctx.save();const sx=shake?(Math.random()-.5)*shake:0,sy=shake?(Math.random()-.5)*shake:0;ctx.translate(sx,sy);
-  drawPitch(t);drawWalls(t);gates.forEach(key=>{const [x,y]=key.split(',').map(Number);drawGate(x,y,t);});stars.forEach(key=>{const [x,y]=key.split(',').map(Number);drawStar(x,y,t);});juices.forEach(key=>{const [x,y]=key.split(',').map(Number);drawJuice(x,y,t);});drawGoal(t);drawBonus(t);drawDefenders(t);drawPlayer(t);drawEffects();drawPowerBar(t);
+  drawPitch(t);drawWalls(t);gates.forEach(key=>{const [x,y]=key.split(',').map(Number);drawGate(x,y,t);});stars.forEach(key=>{const [x,y]=key.split(',').map(Number);drawStar(x,y,t);});juices.forEach(key=>{const [x,y]=key.split(',').map(Number);drawJuice(x,y,t);});cupcakes.forEach(key=>{const [x,y]=key.split(',').map(Number);drawCupcake(x,y,t);});drawGoal(t);drawBonus(t);drawDefenders(t);drawPlayer(t);drawEffects();drawPowerBar(t);
   if(goalCelebrationUntil>t){ctx.globalAlpha=clamp((goalCelebrationUntil-t)/900,0,1);ctx.fillStyle='#fff';ctx.font='900 66px system-ui';ctx.textAlign='center';ctx.shadowColor='#184e2e';ctx.shadowBlur=14;ctx.fillText('GOAL!',420,450);ctx.shadowBlur=0;ctx.globalAlpha=1;}
   ctx.restore();if(flash>0){ctx.fillStyle=`rgba(255,255,255,${flash*.18})`;ctx.fillRect(0,0,canvas.width,canvas.height);}drawOverlay(t);
 }
 function gameLoop(t){
   const dt=Math.min(.04,(t-lastFrame)/1000||0);lastFrame=t;pollGamepad();
   if(state==='play'){
-    const playerSpeed=player.speed*(juiceSpeedUntil>t?JUICE_SPEED_MULT:(sprintUntil>t?1.16:1));
+    const playerSpeed=player.speed*(juiceSpeedUntil>t?JUICE_SPEED_MULT:(cupcakeSlowUntil>t?CUPCAKE_SPEED_MULT:(sprintUntil>t?1.16:1)));
     moveActor(player,dt,playerSpeed,playerChoice,()=>playerArrived(t),(a,d)=>useEmergencyTunnel(a,d,t));
     updateMode(t);maybeSpawnBonus(t);if(bonus&&bonus.until<t)bonus=null;
     defenders.forEach((d,i)=>{
