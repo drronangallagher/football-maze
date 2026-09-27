@@ -15,11 +15,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Download Burp 1 audio to repository
+      - name: Download Burp medium-deep audio to repository
         shell: bash
         run: |
           set -euo pipefail
-          page_url="https://freesound.org/people/9voltfan/sounds/779792/"
+          page_url="https://freesound.org/people/Sadiquecat/sounds/814323/"
           curl --fail --location --retry 5 --retry-delay 2             --user-agent "Mozilla/5.0"             "$page_url"             --output /tmp/burp-page.html
 
           python3 - <<'PY'
@@ -28,7 +28,7 @@ jobs:
           import sys
           from urllib.parse import urljoin
 
-          page_url = 'https://freesound.org/people/9voltfan/sounds/779792/'
+          page_url = 'https://freesound.org/people/Sadiquecat/sounds/814323/'
           page = html.unescape(open('/tmp/burp-page.html', 'r', encoding='utf-8', errors='ignore').read())
           patterns = [
               r'https?://cdn\.freesound\.org/previews/[^"\'<>\s]+?\.mp3(?:\?[^"\'<>\s]*)?',
@@ -90,5 +90,5 @@ jobs:
             echo "burp-1.mp3 is already bundled."
             exit 0
           fi
-          git commit -m "Bundle cupcake burp audio locally"
+          git commit -m "Bundle Burp medium-deep audio locally"
           git push
