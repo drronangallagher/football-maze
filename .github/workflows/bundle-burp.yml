@@ -15,11 +15,11 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: Download mirrored Myinstants Burp 1 audio
+      - name: Download Burp 1 audio to repository
         shell: bash
         run: |
           set -euo pipefail
-          page_url="https://www.soundboardshop.com/en/instant/burp-1"
+          page_url="https://freesound.org/people/9voltfan/sounds/779792/"
           curl --fail --location --retry 5 --retry-delay 2             --user-agent "Mozilla/5.0"             "$page_url"             --output /tmp/burp-page.html
 
           python3 - <<'PY'
@@ -28,34 +28,28 @@ jobs:
           import sys
           from urllib.parse import urljoin
 
-          page = open('/tmp/burp-page.html', 'r', encoding='utf-8', errors='ignore').read()
-          page = html.unescape(page)
-
+          page = html.unescape(open('/tmp/burp-page.html', 'r', encoding='utf-8', errors='ignore').read())
           patterns = [
+              r'https?://cdn\.freesound\.org/previews/[^"\'<>\s]+?\.mp3(?:\?[^"\'<>\s]*)?',
               r'https?://[^"\'<>\s]+?\.mp3(?:\?[^"\'<>\s]*)?',
-              r'["\'](?:audioUrl|audio_url|audio|soundUrl|sound_url|fileUrl|file_url|downloadUrl|download_url|src)["\']\s*:\s*["\']([^"\']+)',
-              r'<source[^>]+src=["\']([^"\']+)["\']',
-              r'<audio[^>]+src=["\']([^"\']+)["\']',
+              r'<source[^>]+src=["\']([^"\']+\.mp3[^"\']*)["\']',
+              r'<audio[^>]+src=["\']([^"\']+\.mp3[^"\']*)["\']',
+              r'["\']preview[^"\']*["\']\s*:\s*["\']([^"\']+\.mp3[^"\']*)["\']',
           ]
-
-          candidates = []
+          candidates=[]
           for pattern in patterns:
-              for m in re.finditer(pattern, page, re.I):
-                  u = m.group(1) if m.lastindex else m.group(0)
-                  u = u.replace('\\/', '/')
-                  u = urljoin('https://www.soundboardshop.com/', u)
+              for m in re.finditer(pattern,page,re.I):
+                  u=m.group(1) if m.lastindex else m.group(0)
+                  u=u.replace('\\/','/')
+                  u=urljoin(page_url,u)
                   if u not in candidates:
                       candidates.append(u)
-
           print("Audio candidates:")
           for u in candidates:
               print(u)
-
-          with open('/tmp/audio-candidates.txt', 'w') as out:
-              out.write('\n'.join(candidates))
-
+          open('/tmp/audio-candidates.txt','w').write('\n'.join(candidates))
           if not candidates:
-              print("No audio URL found in mirrored page source", file=sys.stderr)
+              print("No MP3 preview URL found",file=sys.stderr)
               sys.exit(1)
           PY
 
@@ -76,7 +70,7 @@ jobs:
           done < /tmp/audio-candidates.txt
 
           if [ "$downloaded" -ne 1 ]; then
-            echo "Could not download a valid audio candidate"
+            echo "Could not download a valid MP3 preview"
             exit 1
           fi
 
@@ -95,5 +89,5 @@ jobs:
             echo "burp-1.mp3 is already bundled."
             exit 0
           fi
-          git commit -m "Bundle exact cupcake burp audio"
+          git commit -m "Bundle cupcake burp audio locally"
           git push
