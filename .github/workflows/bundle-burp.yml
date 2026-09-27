@@ -28,6 +28,7 @@ jobs:
           import sys
           from urllib.parse import urljoin
 
+          page_url = 'https://freesound.org/people/9voltfan/sounds/779792/'
           page = html.unescape(open('/tmp/burp-page.html', 'r', encoding='utf-8', errors='ignore').read())
           patterns = [
               r'https?://cdn\.freesound\.org/previews/[^"\'<>\s]+?\.mp3(?:\?[^"\'<>\s]*)?',
