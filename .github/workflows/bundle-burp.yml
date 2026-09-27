@@ -1,0 +1,47 @@
+name: Bundle cupcake burp audio
+
+on:
+  push:
+    paths:
+      - '.github/workflows/bundle-burp.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  bundle-burp:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Download exact Myinstants Burp 1 MP3
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 5 --retry-delay 2 \
+            --user-agent "Mozilla/5.0" \
+            --referer "https://www.myinstants.com/en/instant/burp-1-73520/" \
+            "https://www.myinstants.com/media/sounds/burp-1.mp3" \
+            --output burp-1.mp3
+          test -s burp-1.mp3
+          file burp-1.mp3
+          bytes="$(wc -c < burp-1.mp3)"
+          if [ "$bytes" -lt 1000 ]; then
+            echo "Downloaded file is unexpectedly small: $bytes bytes"
+            exit 1
+          fi
+
+      - name: Commit bundled audio
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add burp-1.mp3
+          if git diff --cached --quiet; then
+            echo "burp-1.mp3 already matches the requested sound."
+            exit 0
+          fi
+          git commit -m "Bundle exact cupcake burp audio"
+          git push
