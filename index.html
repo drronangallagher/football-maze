@@ -868,6 +868,67 @@ function tone(freq,dur,type='sine',gain=.04,endFreq=freq,delay=0){
 function noise(dur=.12,gain=.025){
   if(!soundOn) return;ensureAudio();if(!audioCtx) return;const n=Math.floor(audioCtx.sampleRate*dur),b=audioCtx.createBuffer(1,n,audioCtx.sampleRate),a=b.getChannelData(0);for(let i=0;i<n;i++)a[i]=(Math.random()*2-1)*(1-i/n);const s=audioCtx.createBufferSource(),g=audioCtx.createGain();g.gain.value=gain;s.buffer=b;s.connect(g).connect(audioCtx.destination);s.start();
 }
+function burpSound(){
+  if(!soundOn) return;
+  ensureAudio();
+  if(!audioCtx) return;
+
+  const sr=audioCtx.sampleRate;
+  const dur=.62;
+  const frames=Math.max(1,Math.floor(sr*dur));
+  const buffer=audioCtx.createBuffer(1,frames,sr);
+  const data=buffer.getChannelData(0);
+
+  let phase1=0,phase2=0,phase3=0;
+  let wobblePhase=0;
+  for(let i=0;i<frames;i++){
+    const t=i/sr;
+    const u=t/dur;
+    const attack=Math.min(1,t/.018);
+    const release=Math.pow(Math.max(0,1-u),1.65);
+    const envelope=attack*release;
+
+    const glide=1-u;
+    const wobble=Math.sin(wobblePhase)*8 + Math.sin(wobblePhase*.47)*3;
+    const f1=92 + 82*glide + wobble;
+    const f2=f1*2.03;
+    const f3=f1*3.08;
+
+    phase1+=2*Math.PI*f1/sr;
+    phase2+=2*Math.PI*f2/sr;
+    phase3+=2*Math.PI*f3/sr;
+    wobblePhase+=2*Math.PI*5.4/sr;
+
+    const voiced=
+      Math.sin(phase1)*.72 +
+      Math.sin(phase2)*.21 +
+      Math.sin(phase3)*.09;
+
+    const rasp=(Math.random()*2-1) * (.20 + .18*Math.sin(Math.PI*u));
+    const gulp=Math.sin(2*Math.PI*(36+12*glide)*t) * .12;
+    data[i]=(voiced+rasp+gulp)*envelope*.46;
+  }
+
+  const source=audioCtx.createBufferSource();
+  const lowpass=audioCtx.createBiquadFilter();
+  const formant=audioCtx.createBiquadFilter();
+  const gain=audioCtx.createGain();
+
+  lowpass.type='lowpass';
+  lowpass.frequency.value=720;
+  lowpass.Q.value=.7;
+
+  formant.type='peaking';
+  formant.frequency.value=215;
+  formant.Q.value=1.9;
+  formant.gain.value=8;
+
+  gain.gain.value=.92;
+
+  source.buffer=buffer;
+  source.connect(lowpass).connect(formant).connect(gain).connect(audioCtx.destination);
+  source.start();
+}
 function sfx(type,n=1){
   if(!soundOn)return;
   if(type==='gate'){tone(520+n*55,.07,'triangle',.035,700+n*65);}
@@ -875,7 +936,7 @@ function sfx(type,n=1){
   else if(type==='bonus'){tone(710,.09,'sine',.03,910);tone(910,.12,'sine',.03,1110,.1);}
   else if(type==='golden'){tone(520,.1,'triangle',.04,780);tone(780,.1,'triangle',.04,1040,.09);tone(1040,.2,'triangle',.05,1320,.18);}
   else if(type==='juice'){tone(360,.08,'square',.035,690);tone(690,.09,'triangle',.04,980,.06);tone(980,.14,'sine',.04,1320,.13);}
-  else if(type==='burp'){noise(.11,.022);tone(165,.08,'sawtooth',.045,108);tone(112,.15,'triangle',.04,58,.055);}
+  else if(type==='burp'){burpSound();}
   else if(type==='win'){tone(523,.12,'triangle',.04,659);tone(659,.12,'triangle',.04,784,.1);tone(784,.15,'triangle',.045,1047,.2);tone(1047,.28,'sine',.05,1319,.31);}
   else if(type==='nutmeg'){tone(280,.07,'square',.04,520);tone(650,.12,'triangle',.035,900,.06);}
   else if(type==='tackle'){noise(.16,.05);tone(145,.18,'sawtooth',.055,72);}
