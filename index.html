@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Football Maze">
 <link rel="manifest" href="manifest.webmanifest">
-<title>Football Maze - Touch Edition v16</title>
+<title>Football Maze - Touch Edition v17</title>
 <style>
 :root{
   color-scheme:dark;
@@ -335,6 +335,8 @@ const BURP_SOUND_URL = 'burp-1.mp3';
 const burpAudio = new Audio(BURP_SOUND_URL);
 burpAudio.preload = 'auto';
 burpAudio.volume = 1;
+burpAudio.defaultPlaybackRate = 2;
+burpAudio.playbackRate = 2;
 let burpAudioPrimed = false;
 let burpBuffer = null;
 let burpBufferPromise = null;
@@ -929,6 +931,7 @@ function burpSound(){
       const gain=audioCtx.createGain();
       gain.gain.value=1;
       source.buffer=burpBuffer;
+      source.playbackRate.value=2;
       source.connect(gain).connect(audioCtx.destination);
       source.start(0);
       return;
@@ -939,6 +942,7 @@ function burpSound(){
     burpAudio.pause();
     burpAudio.currentTime=0;
     burpAudio.volume=1;
+    burpAudio.playbackRate=2;
     const playPromise=burpAudio.play();
     if(playPromise && typeof playPromise.catch==='function'){
       playPromise.catch(()=>{});
