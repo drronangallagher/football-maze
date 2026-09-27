@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Football Maze">
 <link rel="manifest" href="manifest.webmanifest">
-<title>Football Maze - Touch Edition v19</title>
+<title>Football Maze - Touch Edition v20</title>
 <style>
 :root{
   color-scheme:dark;
@@ -73,12 +73,63 @@ button.primary:hover{background:linear-gradient(180deg,#77eb98,#42b968)}
 
 .play-column{min-height:0;min-width:0;display:grid;grid-template-rows:minmax(0,1fr);gap:7px}
 .touch-controller{display:none;min-height:228px;align-items:center;justify-content:space-between;gap:28px;padding:8px 28px 4px;touch-action:none;user-select:none;-webkit-user-select:none}
-.touch-dpad{width:224px;height:224px;flex:0 0 224px;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:4px;touch-action:none;user-select:none;-webkit-user-select:none}
-.touch-dir,.touch-dpad-center{position:static;width:100%;height:100%;min-height:0;padding:0;border:1px solid rgba(181,218,239,.42);background:linear-gradient(180deg,rgba(36,66,86,.98),rgba(15,36,51,.99));color:#f6fbff;box-shadow:inset 0 1px rgba(255,255,255,.11),0 6px 16px rgba(0,0,0,.32);display:grid;place-items:center;font-size:38px;font-weight:950;line-height:1;touch-action:none;border-radius:17px}
-.touch-dir.active{background:linear-gradient(180deg,#78eba0,#39b866);color:#07170d;border-color:#98ffb7;transform:scale(.96)}
-.touch-up{grid-column:2;grid-row:1}.touch-down{grid-column:2;grid-row:3}.touch-left{grid-column:1;grid-row:2}.touch-right{grid-column:3;grid-row:2}
-.touch-dpad-center{grid-column:2;grid-row:2;background:#0c2130;color:#8fabbc;font-size:34px;pointer-events:none;z-index:4;transform:translate(var(--joy-x,0px),var(--joy-y,0px));transition:transform .09s ease-out}
-.touch-dpad.tracking .touch-dpad-center{transition:none}
+.touch-dpad{
+  --joy-x:0px;--joy-y:0px;
+  position:relative;width:224px;height:224px;flex:0 0 224px;border-radius:50%;
+  touch-action:none;user-select:none;-webkit-user-select:none;overflow:visible;
+  border:2px solid rgba(174,211,232,.32);
+  background:
+    radial-gradient(circle at 38% 30%,rgba(255,255,255,.11),transparent 24%),
+    radial-gradient(circle at 50% 52%,#1c3d52 0 21%,#102c3f 22% 54%,#0a2130 55% 72%,#071822 73% 100%);
+  box-shadow:
+    inset 0 2px 3px rgba(255,255,255,.09),
+    inset 0 -10px 24px rgba(0,0,0,.38),
+    0 8px 22px rgba(0,0,0,.34);
+}
+.touch-dpad:before{
+  content:'';position:absolute;inset:13%;border-radius:50%;pointer-events:none;
+  border:1px solid rgba(182,218,238,.19);
+  background:
+    radial-gradient(circle,transparent 0 42%,rgba(255,255,255,.035) 43% 44%,transparent 45%),
+    conic-gradient(from 22.5deg,
+      rgba(190,220,238,.10) 0 1.2%,transparent 1.2% 11.3%,
+      rgba(190,220,238,.10) 11.3% 12.5%,transparent 12.5% 23.8%,
+      rgba(190,220,238,.10) 23.8% 25%,transparent 25% 36.3%,
+      rgba(190,220,238,.10) 36.3% 37.5%,transparent 37.5% 48.8%,
+      rgba(190,220,238,.10) 48.8% 50%,transparent 50% 61.3%,
+      rgba(190,220,238,.10) 61.3% 62.5%,transparent 62.5% 73.8%,
+      rgba(190,220,238,.10) 73.8% 75%,transparent 75% 86.3%,
+      rgba(190,220,238,.10) 86.3% 87.5%,transparent 87.5% 98.8%,
+      rgba(190,220,238,.10) 98.8% 100%);
+  box-shadow:inset 0 5px 12px rgba(0,0,0,.24);
+}
+.touch-dpad:after{
+  content:'';position:absolute;left:50%;top:50%;width:54%;height:54%;transform:translate(-50%,-50%);
+  border-radius:50%;pointer-events:none;
+  box-shadow:0 0 0 1px rgba(255,255,255,.045),inset 0 0 22px rgba(0,0,0,.24);
+}
+.touch-dpad-center{
+  position:absolute;left:50%;top:50%;z-index:4;width:42%;height:42%;min-height:0;padding:0;
+  transform:translate(-50%,-50%) translate(var(--joy-x),var(--joy-y));
+  transition:transform .14s cubic-bezier(.2,.8,.2,1),box-shadow .16s ease;
+  border-radius:50%;pointer-events:none;display:grid;place-items:center;
+  color:#d9e7ef;font-size:34px;font-weight:950;line-height:1;
+  border:2px solid rgba(209,232,245,.48);
+  background:
+    radial-gradient(circle at 38% 30%,rgba(255,255,255,.18),transparent 22%),
+    linear-gradient(155deg,#31566d 0%,#1b3c51 48%,#0e2839 100%);
+  box-shadow:
+    inset 0 2px 2px rgba(255,255,255,.13),
+    inset 0 -9px 16px rgba(0,0,0,.24),
+    0 8px 15px rgba(0,0,0,.42);
+}
+.touch-dpad-center span{filter:drop-shadow(0 2px 2px rgba(0,0,0,.35));transform:scale(.92)}
+.touch-dpad.tracking{border-color:rgba(117,235,156,.58);box-shadow:inset 0 2px 3px rgba(255,255,255,.09),inset 0 -10px 24px rgba(0,0,0,.38),0 0 0 3px rgba(77,211,123,.12),0 8px 22px rgba(0,0,0,.34)}
+.touch-dpad.tracking .touch-dpad-center{
+  transition:none;
+  border-color:rgba(154,246,183,.72);
+  box-shadow:inset 0 2px 2px rgba(255,255,255,.15),inset 0 -9px 16px rgba(0,0,0,.20),0 8px 18px rgba(0,0,0,.46),0 0 15px rgba(73,220,125,.20);
+}
 .touch-actions{margin-left:auto;display:flex;align-items:center;justify-content:flex-end;gap:24px;touch-action:none}
 .touch-action-btn{width:112px;height:112px;min-height:112px;border-radius:50%;padding:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:linear-gradient(180deg,rgba(35,68,89,.98),rgba(12,34,49,.98));border:2px solid rgba(173,216,240,.42);box-shadow:inset 0 2px rgba(255,255,255,.08),0 6px 18px rgba(0,0,0,.34);touch-action:none}
 .touch-action-btn strong{font-size:28px;line-height:1}.touch-action-btn span{font-size:11px;letter-spacing:.08em;color:#a9c0cf;font-weight:900}.touch-action-btn.primary-touch{background:linear-gradient(180deg,#69e48e,#36aa5d);border-color:#91f5ae;color:#07150c}.touch-action-btn.primary-touch span{color:#12391f}.touch-action-btn:active,.touch-action-btn.pressed{transform:scale(.95)}
@@ -89,13 +140,12 @@ button.primary:hover{background:linear-gradient(180deg,#77eb98,#42b968)}
 .touch-capable .pad-pill{display:none}
 .touch-capable .play-column{grid-template-rows:minmax(0,1fr) auto}
 .touch-capable .touch-controller{display:flex}
-.touch-capable .kit-hint:after{content:' • Touch: tap kit, then START'}
+.touch-capable .kit-hint:after{content:' • Touch: tap kit/difficulty, then START'}
 @media (pointer:coarse),(hover:none){button:hover{background:#132a3b;border-color:#34546b}.touch-action-btn.primary-touch:hover{background:linear-gradient(180deg,#69e48e,#36aa5d);border-color:#91f5ae}}
 @media(max-width:900px){
   .touch-controller{min-height:192px;padding:6px 16px 2px;gap:18px}
-  .touch-dpad{width:184px;height:184px;flex-basis:184px;gap:4px}
-  .touch-dir,.touch-dpad-center{font-size:31px;border-radius:15px}
-  .touch-dpad-center{font-size:28px}
+  .touch-dpad{width:184px;height:184px;flex-basis:184px}
+  .touch-dpad-center{font-size:29px}
   .touch-action-btn{width:92px;height:92px;min-height:92px}
   .touch-action-btn strong{font-size:23px}.touch-action-btn span{font-size:10px}
   .touch-actions{gap:16px}
@@ -109,18 +159,16 @@ button.primary:hover{background:linear-gradient(180deg,#77eb98,#42b968)}
   .touch-capable .hud-card span{font-size:11px}
   .touch-capable .hud-card.score{min-width:64px}
   .touch-controller{min-height:170px;padding:4px 10px 0;gap:14px}
-  .touch-dpad{width:162px;height:162px;flex-basis:162px;gap:3px}
-  .touch-dir,.touch-dpad-center{font-size:27px;border-radius:13px}
-  .touch-dpad-center{font-size:24px}
+  .touch-dpad{width:162px;height:162px;flex-basis:162px}
+  .touch-dpad-center{font-size:25px}
   .touch-action-btn{width:82px;height:82px;min-height:82px}
   .touch-action-btn strong{font-size:21px}.touch-action-btn span{font-size:9px}
   .touch-actions{gap:12px}
 }
 @media(max-width:480px){
   .touch-controller{min-height:148px;padding-left:6px;padding-right:6px;gap:8px}
-  .touch-dpad{width:142px;height:142px;flex-basis:142px;gap:3px}
-  .touch-dir,.touch-dpad-center{font-size:23px;border-radius:12px}
-  .touch-dpad-center{font-size:21px}
+  .touch-dpad{width:142px;height:142px;flex-basis:142px}
+  .touch-dpad-center{font-size:22px}
   .touch-action-btn{width:70px;height:70px;min-height:70px}
   .touch-action-btn strong{font-size:18px}.touch-action-btn span{font-size:8px}
   .touch-actions{gap:8px}
@@ -191,12 +239,8 @@ button.primary:hover{background:linear-gradient(180deg,#77eb98,#42b968)}
     </div>
 
     <div class="touch-controller" id="touchController" aria-label="Touch controls">
-      <div class="touch-dpad" id="touchDpad" role="group" aria-label="Movement pad">
-        <button class="touch-dir touch-up" type="button" data-dir="u" aria-label="Move up">▲</button>
-        <button class="touch-dir touch-left" type="button" data-dir="l" aria-label="Move left">◀</button>
-        <div class="touch-dpad-center" aria-hidden="true">⚽</div>
-        <button class="touch-dir touch-right" type="button" data-dir="r" aria-label="Move right">▶</button>
-        <button class="touch-dir touch-down" type="button" data-dir="d" aria-label="Move down">▼</button>
+      <div class="touch-dpad" id="touchDpad" role="application" aria-label="360 degree movement joystick">
+        <div class="touch-dpad-center" aria-hidden="true"><span>⚽</span></div>
       </div>
       <div class="touch-actions">
         <button class="touch-action-btn primary-touch" id="touchStartBtn" type="button" aria-label="Start or continue"><strong>A</strong><span>START</span></button>
@@ -240,7 +284,7 @@ button.primary:hover{background:linear-gradient(180deg,#77eb98,#42b968)}
           <div class="key"><b>A button</b>Start / continue</div>
           <div class="key"><b>Start button</b>Pause / resume</div>
           <div class="key"><b>Keyboard</b>Arrows / WASD</div>
-          <div class="key"><b>Touchscreen</b>D-pad + Start/Pause</div>
+          <div class="key"><b>Touchscreen</b>360° thumbstick + Start/Pause</div>
         </div>
       </div>
     </aside>
@@ -704,6 +748,12 @@ function moveActor(a,dt,speed,choose,onArrive,onDepart){
   }
 }
 function playerChoice(){
+  if(touchAnalog.active && state==='play'){
+    const ranked=rankAnalogDirections(touchAnalog.dx,touchAnalog.dy);
+    for(const dir of ranked){
+      if(canMove(player.x,player.y,dir)) return dir;
+    }
+  }
   if(canMove(player.x,player.y,player.want)) return player.want;
   if(canMove(player.x,player.y,player.d)) return player.d;
   return 'n';
@@ -1080,49 +1130,80 @@ window.addEventListener('gamepadconnected',()=>pollGamepad());
 window.addEventListener('gamepaddisconnected',()=>pollGamepad());
 
 let touchPadPointer = null;
-let touchPadVisualDir = null;
+let touchPadPrimaryDir = null;
+let touchAnalog = {active:false,dx:0,dy:0,mag:0};
+const JOY_DEAD_ZONE=.12;
+const JOY_FULL_THROW=.72;
+
 function clearTouchPadVisual(){
-  touchPadVisualDir=null;
-  if(!ui.touchDpad) return;
-  ui.touchDpad.querySelectorAll('.touch-dir').forEach(b=>b.classList.remove('active'));
+  touchPadPrimaryDir=null;
+  touchAnalog={active:false,dx:0,dy:0,mag:0};
 }
-const JOY_DEAD_ZONE=.10;
-const JOY_SWITCH_RATIO=1.18;
+
 function joystickSample(clientX,clientY){
   if(!ui.touchDpad) return null;
   const r=ui.touchDpad.getBoundingClientRect();
   const cx=r.left+r.width/2, cy=r.top+r.height/2;
   const rawX=clientX-cx, rawY=clientY-cy;
   const half=Math.max(1,Math.min(r.width,r.height)/2);
-  const dx=rawX/half, dy=rawY/half;
-  const mag=Math.hypot(dx,dy);
-  const maxVisual=Math.min(r.width,r.height)*.285;
   const rawMag=Math.hypot(rawX,rawY);
+  const nx=rawX/half, ny=rawY/half;
+  const mag=rawMag/half;
+
+  // The knob follows the finger continuously around a circular gate.
+  // Its travel is clamped only when the thumb reaches the physical edge.
+  const maxVisual=half*.56;
   const visualScale=rawMag>0?Math.min(1,maxVisual/rawMag):0;
-  return {dx,dy,mag,visualX:rawX*visualScale,visualY:rawY*visualScale};
+  const visualX=rawX*visualScale;
+  const visualY=rawY*visualScale;
+
+  return {dx:nx,dy:ny,mag,visualX,visualY};
 }
-function stickyJoystickDirection(sample){
-  if(!sample || sample.mag<JOY_DEAD_ZONE) return null;
-  const {dx,dy}=sample;
-  const ax=Math.abs(dx), ay=Math.abs(dy);
-  const horizontal=touchPadVisualDir==='l'||touchPadVisualDir==='r';
-  const vertical=touchPadVisualDir==='u'||touchPadVisualDir==='d';
-  if(!horizontal&&!vertical) return ax>=ay?(dx<0?'l':'r'):(dy<0?'u':'d');
-  if(horizontal){
-    if(ay>ax*JOY_SWITCH_RATIO) return dy<0?'u':'d';
-    return dx<0?'l':'r';
-  }
-  if(ax>ay*JOY_SWITCH_RATIO) return dx<0?'l':'r';
-  return dy<0?'u':'d';
+
+function rankAnalogDirections(dx,dy){
+  const len=Math.hypot(dx,dy);
+  if(len<JOY_DEAD_ZONE) return [];
+  const x=dx/len,y=dy/len;
+  const vectors={u:[0,-1],r:[1,0],d:[0,1],l:[-1,0]};
+  return ['u','r','d','l']
+    .map(dir=>{
+      const v=vectors[dir];
+      let score=x*v[0]+y*v[1];
+      // Small hysteresis around diagonals stops tiny thumb tremors causing
+      // rapid direction swapping while preserving genuine 360-degree intent.
+      if(dir===player.d) score+=.055;
+      if(dir===touchPadPrimaryDir) score+=.025;
+      return {dir,score};
+    })
+    .sort((a,b)=>b.score-a.score)
+    .map(x=>x.dir);
 }
+
 function updateTouchJoystick(clientX,clientY){
   const sample=joystickSample(clientX,clientY);
   if(!sample) return;
+
   ui.touchDpad.style.setProperty('--joy-x',sample.visualX.toFixed(1)+'px');
   ui.touchDpad.style.setProperty('--joy-y',sample.visualY.toFixed(1)+'px');
-  const dir=stickyJoystickDirection(sample);
-  if(dir) applyTouchDirection(dir);
+
+  if(sample.mag<JOY_DEAD_ZONE){
+    touchAnalog={active:false,dx:0,dy:0,mag:sample.mag};
+    touchPadPrimaryDir=null;
+    return;
+  }
+
+  const strength=Math.min(1,(sample.mag-JOY_DEAD_ZONE)/(JOY_FULL_THROW-JOY_DEAD_ZONE));
+  touchAnalog={active:true,dx:sample.dx,dy:sample.dy,mag:strength};
+
+  const ranked=rankAnalogDirections(sample.dx,sample.dy);
+  const primary=ranked[0]||null;
+  if(primary && primary!==touchPadPrimaryDir){
+    touchPadPrimaryDir=primary;
+    ensureAudio();
+    setDirection(primary);
+  }
 }
+
 function resetTouchJoystick(){
   if(!ui.touchDpad) return;
   ui.touchDpad.classList.remove('tracking');
@@ -1130,13 +1211,7 @@ function resetTouchJoystick(){
   ui.touchDpad.style.setProperty('--joy-y','0px');
   clearTouchPadVisual();
 }
-function applyTouchDirection(dir){
-  if(!dir || dir===touchPadVisualDir) return;
-  touchPadVisualDir=dir;
-  ui.touchDpad.querySelectorAll('.touch-dir').forEach(b=>b.classList.toggle('active',b.dataset.dir===dir));
-  ensureAudio();
-  setDirection(dir);
-}
+
 if(ui.touchDpad){
   ui.touchDpad.addEventListener('pointerdown',e=>{
     if(!touchCapable && e.pointerType==='mouse') return;
@@ -1159,7 +1234,10 @@ if(ui.touchDpad){
   };
   ui.touchDpad.addEventListener('pointerup',endTouchPad);
   ui.touchDpad.addEventListener('pointercancel',endTouchPad);
-  ui.touchDpad.addEventListener('lostpointercapture',()=>{touchPadPointer=null;resetTouchJoystick();});
+  ui.touchDpad.addEventListener('lostpointercapture',()=>{
+    touchPadPointer=null;
+    resetTouchJoystick();
+  });
 }
 function touchActionPress(button,action){
   if(!button) return;
