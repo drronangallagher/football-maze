@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Football Maze">
 <link rel="manifest" href="manifest.webmanifest">
-<title>Football Maze - Touch Edition v15</title>
+<title>Football Maze - Touch Edition v16</title>
 <style>
 :root{
   color-scheme:dark;
@@ -331,11 +331,13 @@ let shake = 0, flash = 0, goalCelebrationUntil = 0, goalCooldownUntil = 0;
 let goalCrossedTiles = new Set();
 let particles = [], floaters = [];
 let audioCtx = null, soundOn = true;
-const BURP_SOUND_URL = 'https://www.myinstants.com/media/sounds/burp-1.mp3';
+const BURP_SOUND_URL = 'burp-1.mp3';
 const burpAudio = new Audio(BURP_SOUND_URL);
 burpAudio.preload = 'auto';
 burpAudio.volume = 1;
 let burpAudioPrimed = false;
+let burpBuffer = null;
+let burpBufferPromise = null;
 let pendingLevelTimer = 0, pendingLifeTimer = 0;
 let kitIndex = Math.max(0,KIT_OPTIONS.findIndex(x=>x.id===(localStorage.getItem('footballMazeKit')||'blue')));
 
@@ -861,9 +863,28 @@ function updateEffects(dt){
   shake=Math.max(0,shake-dt*24);flash=Math.max(0,flash-dt*2.4);
 }
 
+function loadBurpBuffer(){
+  if(!soundOn || !audioCtx || burpBuffer || burpBufferPromise) return burpBufferPromise;
+  burpBufferPromise=fetch(BURP_SOUND_URL,{cache:'force-cache'})
+    .then(r=>{
+      if(!r.ok) throw new Error('Burp audio HTTP '+r.status);
+      return r.arrayBuffer();
+    })
+    .then(bytes=>audioCtx.decodeAudioData(bytes))
+    .then(buffer=>{
+      burpBuffer=buffer;
+      return buffer;
+    })
+    .catch(()=>{
+      burpBufferPromise=null;
+      return null;
+    });
+  return burpBufferPromise;
+}
 function primeBurpAudio(){
   if(!soundOn || burpAudioPrimed) return;
   try{
+    burpAudio.load();
     const previousVolume=burpAudio.volume;
     burpAudio.volume=0;
     const playPromise=burpAudio.play();
@@ -888,6 +909,7 @@ function ensureAudio(){
   if(!soundOn) return;
   if(!audioCtx){ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }
   if(audioCtx.state==='suspended') audioCtx.resume();
+  loadBurpBuffer();
   primeBurpAudio();
 }
 function tone(freq,dur,type='sine',gain=.04,endFreq=freq,delay=0){
@@ -899,6 +921,20 @@ function noise(dur=.12,gain=.025){
 }
 function burpSound(){
   if(!soundOn) return;
+  ensureAudio();
+
+  if(audioCtx && burpBuffer){
+    try{
+      const source=audioCtx.createBufferSource();
+      const gain=audioCtx.createGain();
+      gain.gain.value=1;
+      source.buffer=burpBuffer;
+      source.connect(gain).connect(audioCtx.destination);
+      source.start(0);
+      return;
+    }catch(_e){}
+  }
+
   try{
     burpAudio.pause();
     burpAudio.currentTime=0;
@@ -908,6 +944,8 @@ function burpSound(){
       playPromise.catch(()=>{});
     }
   }catch(_e){}
+
+  loadBurpBuffer();
 }
 function sfx(type,n=1){
   if(!soundOn)return;
